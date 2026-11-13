@@ -210,8 +210,16 @@ main {
   box-shadow: none;
 }
 
+/* PERMUKIMAN: SIMBOL POLIGON UNGU */
 .legend-symbol.permukiman {
-  color: #e67e22;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 14px;
+  border: 2px solid #8e44ad;
+  border-radius: 2px;
+  background: rgba(142, 68, 173, 0.20);
+  color: transparent;
+  font-size: 0;
 }
 
 .legend-symbol.bangunan {
