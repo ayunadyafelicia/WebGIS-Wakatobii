@@ -203,27 +203,31 @@ main {
   flex: 0 0 25px;
   width: 25px;
   height: 25px;
-  border: 2px solid white;
-  border-radius: 50%;
-  color: white;
-  font-size: 12px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  font-size: 17px;
+  box-shadow: none;
 }
 
 .legend-symbol.permukiman {
-  background: #e67e22;
+  color: #e67e22;
 }
 
 .legend-symbol.bangunan {
-  background: #e84393;
+  color: #e84393;
 }
 
 .legend-symbol.pemerintah {
-  background: #8e44ad;
+  color: #8e44ad;
 }
 
 .legend-symbol.wisata {
-  background: #00a8cc;
+  color: #00a8cc;
+}
+
+.legend-symbol.wisata-sejarah {
+  color: #8b4513;
 }
 
 
