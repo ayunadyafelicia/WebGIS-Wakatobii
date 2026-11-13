@@ -311,13 +311,14 @@ document.addEventListener("DOMContentLoaded", function () {
       pengaturan.fillOpacity = 0;
     }
 
-    // PERMUKIMAN: POLIGON BERWARNA UNGU
+    // PERMUKIMAN: POLIGON UNGU
     if (jenis === "permukiman") {
       pengaturan.color = "#8e44ad";
       pengaturan.fillColor = "#8e44ad";
-      pengaturan.weight = 1.5;
+      pengaturan.weight = 1.8;
       pengaturan.opacity = 1;
-      pengaturan.fillOpacity = 0.45;
+      pengaturan.fillOpacity = 0.55;
+      pengaturan.fill = true;
     }
 
     if (jenis === "bangunan") {
@@ -413,16 +414,17 @@ document.addEventListener("DOMContentLoaded", function () {
           );
         });
 
+        // HOVER: MEMPERTAHANKAN WARNA ASLI SETIAP LAYER
         layer.on("mouseover", function () {
           if (layer.setStyle) {
             layer.setStyle({
               weight: 3,
-              color: "#ffffff",
-              fillOpacity: 0.3
+              fillOpacity: jenis === "permukiman" ? 0.7 : 0.3
             });
           }
         });
 
+        // KEMBALIKAN STYLE SEMULA SAAT KURSOR KELUAR
         layer.on("mouseout", function () {
           if (layer.setStyle) {
             layer.setStyle(styleGeoJSON(jenis));
@@ -604,6 +606,18 @@ document.addEventListener("DOMContentLoaded", function () {
         );
       }
 
+      // PASTIKAN PERMUKIMAN SELALU MENGGUNAKAN WARNA UNGU
+      if (jenis === "permukiman") {
+        layer.setStyle({
+          color: "#8e44ad",
+          fillColor: "#8e44ad",
+          weight: 1.8,
+          opacity: 1,
+          fillOpacity: 0.55,
+          fill: true
+        });
+      }
+
       layerData[jenis] = layer;
 
       const checkbox = document.querySelector(
@@ -761,7 +775,7 @@ document.addEventListener("DOMContentLoaded", function () {
       lat: -5.2800,
       lng: 123.5900,
       ikon: "fa-monument",
-      warna: "#8e44ad"
+      warna: "#8b4513"
     }
   ];
 
