@@ -1,4 +1,3 @@
-
 * {
   box-sizing: border-box;
 }
@@ -10,342 +9,312 @@ body {
   width: 100%;
   height: 100%;
   font-family: Arial, Helvetica, sans-serif;
+  color: #333;
   overflow: hidden;
 }
 
-/* HEADER */
-
 header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: #123b50;
-  color: white;
-  display: flex;
-  align-items: center;
-  padding: 0 22px;
-  z-index: 1000;
-}
-
-.header-title {
+  height: 58px;
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-header h1 {
+  padding: 0 20px;
+  background: #123d52;
+  color: white;
   font-size: 19px;
-  margin: 0;
-  font-weight: 600;
+  font-weight: bold;
 }
 
-/* PANEL SAMPING */
+header i {
+  font-size: 20px;
+}
+
+main {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 58px);
+}
 
 #panel {
-  position: absolute;
-  top: 60px;
-  left: 0;
-  bottom: 0;
-  width: 350px;
-  background: #ffffff;
-  padding: 18px;
+  width: 338px;
+  min-width: 338px;
+  height: 100%;
   overflow-y: auto;
-  z-index: 900;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  padding: 16px 17px;
+  background: #fff;
+  z-index: 500;
 }
 
-.judul-filter {
-  display: block;
-  margin-bottom: 10px;
+#panel section {
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e1e1e1;
+}
+
+#panel section:last-child {
+  border-bottom: none;
+}
+
+#panel h3 {
+  margin: 0 0 12px;
   font-size: 14px;
+  color: #111;
 }
 
-/* PETA */
-
-#map {
-  position: absolute;
-  top: 60px;
-  bottom: 0;
-  left: 350px;
-  right: 0;
-  z-index: 1;
+#panel h3 i {
+  margin-right: 3px;
 }
 
-/* FILTER */
-
-.filter-card {
-  margin: 10px 0 14px;
-}
-
-.filter-section {
-  margin: 7px 0;
-}
-
-.filter-subtitle {
-  display: block;
-  color: #123b50;
+#panel h4 {
+  margin: 0 0 9px;
   font-size: 12px;
-  margin-bottom: 9px;
+  color: #16445a;
 }
 
 .filter-check {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   margin: 8px 0;
   font-size: 12px;
-  color: #333;
   cursor: pointer;
 }
 
 .filter-check input {
   width: 14px;
   height: 14px;
-  accent-color: #123b50;
+  margin: 0;
+  accent-color: #16445a;
   cursor: pointer;
 }
 
-.filter-card hr {
-  border: 0;
-  border-top: 1px solid #ddd;
-  margin: 12px 0;
-}
-
-/* FILTER PARIWISATA */
-
-.chips-container {
+.chip-container {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 .chip {
-  border: 1px solid #cbd5dc;
-  background: #f5f7f9;
-  color: #333;
-  padding: 6px 9px;
+  border: none;
   border-radius: 5px;
+  padding: 7px 10px;
+  background: #16445a;
+  color: white;
   font-size: 11px;
   cursor: pointer;
   transition: 0.2s;
 }
 
-.chip:hover {
-  background: #dceaf0;
-}
-
+.chip:hover,
 .chip.active {
-  background: #123b50;
-  color: white;
-  border-color: #123b50;
+  background: #287b9d;
 }
 
-/* DETAIL OBJEK */
-
-#hasil {
-  background: #f6f8fa;
-  border: 1px solid #e1e6eb;
-  border-radius: 8px;
-  padding: 13px;
-  font-size: 13px;
+#status-data {
+  font-size: 12px;
   line-height: 1.6;
   color: #333;
-  min-height: 100px;
+}
+
+.status-success {
+  color: #16834a;
+}
+
+.status-error {
+  color: #d71920;
+}
+
+.status-loading {
+  color: #777;
+}
+
+.status-row {
+  margin: 4px 0;
+}
+
+.legend-section {
+  font-size: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 9px 0;
+  font-size: 12px;
+}
+
+.legend-area {
+  display: inline-block;
+  width: 19px;
+  height: 13px;
+  border: 2px solid;
+  border-radius: 2px;
+}
+
+.legend-area.kab {
+  border-color: #f4e342;
+  background: rgba(244, 227, 66, 0.18);
+}
+
+.legend-area.kec {
+  border-color: #ff8c42;
+  background: rgba(255, 140, 66, 0.12);
+}
+
+.legend-area.desa {
+  border-color: #e7e7e7;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.legend-line {
+  display: inline-block;
+  width: 22px;
+  height: 0;
+  border-top: 3px solid;
+}
+
+.legend-line.jalan {
+  border-color: #ff3b30;
+}
+
+.legend-line.pantai {
+  border-color: #00e5ff;
+  border-top-style: dashed;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 2px #333;
+}
+
+.legend-dot.permukiman {
+  background: #e67e22;
+}
+
+.legend-dot.bangunan {
+  background: #e84393;
+}
+
+.legend-dot.pemerintah {
+  background: #8e44ad;
+}
+
+.legend-dot.wisata {
+  background: #00a8cc;
+}
+
+#hasil {
+  min-height: 103px;
+  padding: 20px 12px;
+  border: 1px solid #e3e8ec;
+  border-radius: 8px;
+  background: #f5f7f9;
+  text-align: center;
+  color: #687987;
+  font-size: 12px;
   overflow-wrap: anywhere;
 }
 
-#hasil h3 {
-  font-size: 15px;
-  color: #123b50;
-  margin-top: 0;
+#hasil > i {
+  font-size: 19px;
+  margin-bottom: 8px;
 }
 
 #hasil p {
   margin: 5px 0;
 }
 
-.empty-state {
-  color: #687782;
-  text-align: center;
-  padding: 12px 4px;
-}
-
-.empty-state i {
-  font-size: 20px;
-}
-
-/* IKON PETA */
-
-.ikon-peta {
-  background: transparent;
-  border: none;
-}
-
-.marker-custom {
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  background: var(--warna);
-  border: 2px solid white;
-  border-radius: 50% 50% 50% 8%;
-  transform: rotate(-45deg);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-.marker-custom i {
-  font-size: 15px;
-  transform: rotate(45deg);
-}
-
-/* LEGENDA */
-
-.legenda-peta {
-  background: rgba(255, 255, 255, 0.96);
-  padding: 13px 15px;
-  border-radius: 9px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-  font-size: 12px;
-  line-height: 1.8;
-  color: #333;
-  width: 205px;
-  max-height: 75vh;
-  overflow-y: auto;
-}
-
-.legenda-peta h4 {
-  margin: 0 0 9px;
-  padding-bottom: 7px;
-  border-bottom: 2px solid #e0e0e0;
+.detail-title {
   font-size: 14px;
-  color: #123b50;
+  font-weight: bold;
+  color: #16445a;
+  margin-bottom: 9px;
 }
 
-.legenda-peta b {
+.detail-row {
+  text-align: left;
+  margin: 6px 0;
+  line-height: 1.5;
+}
+
+#map {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+  background: #dce6e9;
+}
+
+.basemap-control {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  background: white;
+  border-radius: 9px;
+  padding: 10px 13px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+  font-size: 12px;
+}
+
+.basemap-control label {
   display: block;
   margin: 5px 0;
-  color: #123b50;
-  font-size: 11px;
-  letter-spacing: 0.4px;
-}
-
-.legenda-peta hr {
-  border: 0;
-  border-top: 1px solid #ddd;
-  margin: 9px 0;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 25px;
-}
-
-.legend-line {
-  display: inline-block;
-  width: 27px;
-  height: 0;
-  flex-shrink: 0;
-}
-
-.legend-line.kabupaten {
-  border-top: 4px solid #ff3b30;
-}
-
-.legend-line.kecamatan {
-  border-top: 3px dashed #ff9800;
-}
-
-.legend-line.desa {
-  border-top: 2px dashed #ffeb3b;
-}
-
-.legend-line.jalan {
-  border-top: 2px solid #999999;
-}
-
-.legend-line.pantai {
-  border-top: 3px solid #00bcd4;
-}
-
-.legend-area {
-  width: 18px;
-  height: 13px;
-  display: inline-block;
-  flex-shrink: 0;
-  border: 2px solid #9c27b0;
-  background: #ba68c8;
-  opacity: 0.8;
-}
-
-.legend-icon {
-  width: 25px;
-  height: 25px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: white;
-  background: var(--warna);
-  border: 1.5px solid white;
-  border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.legend-icon i {
-  font-size: 12px;
-}
-
-/* BASEMAP */
-
-.leaflet-control-layers {
-  border: none !important;
-  border-radius: 8px !important;
-  padding: 10px !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
-  font-size: 12px;
-}
-
-.leaflet-control-layers label {
-  margin-bottom: 5px;
   cursor: pointer;
 }
 
-.leaflet-control-layers-selector {
-  cursor: pointer;
+.basemap-control input {
+  accent-color: #1675d1;
 }
-
-/* POPUP */
 
 .leaflet-popup-content {
-  font-size: 12px;
-  line-height: 1.6;
+  max-width: 260px;
+  overflow-wrap: anywhere;
 }
 
-/* RESPONSIVE */
+.custom-marker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 36px;
+  color: white;
+  border: 2px solid white;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+}
 
-@media (max-width: 768px) {
+.custom-marker i {
+  transform: rotate(45deg);
+  font-size: 13px;
+}
+
+@media (max-width: 700px) {
+  header {
+    height: 52px;
+    font-size: 14px;
+    padding: 0 10px;
+  }
+
+  main {
+    height: calc(100vh - 52px);
+  }
+
   #panel {
     width: 260px;
+    min-width: 260px;
     padding: 12px;
   }
 
-  #map {
-    left: 260px;
-  }
-
-  header h1 {
-    font-size: 15px;
-  }
-
-  .legenda-peta {
-    width: 175px;
-    font-size: 11px;
+  .basemap-control {
+    top: 8px;
+    right: 8px;
   }
 }
