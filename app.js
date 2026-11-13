@@ -1,3 +1,4 @@
+
 // ======================================================
 // WEBGIS KABUPATEN WAKATOBI
 // Membaca GeoJSON langsung dari ROOT repository
@@ -43,30 +44,23 @@ document.querySelectorAll('input[name="basemap"]').forEach(input => {
 
 
 // 3. PANE UNTUK MENGATUR URUTAN LAYER
-map.createPane("paneKabupaten");
-map.getPane("paneKabupaten").style.zIndex = 410;
+const daftarPane = [
+  ["paneKabupaten", 410],
+  ["paneKecamatan", 420],
+  ["paneDesa", 425],
+  ["panePantai", 430],
+  ["paneJalan", 440],
+  ["paneFasilitas", 450],
+  ["paneWisata", 460]
+];
 
-map.createPane("paneKecamatan");
-map.getPane("paneKecamatan").style.zIndex = 420;
-
-map.createPane("paneDesa");
-map.getPane("paneDesa").style.zIndex = 425;
-
-map.createPane("panePantai");
-map.getPane("panePantai").style.zIndex = 430;
-
-map.createPane("paneJalan");
-map.getPane("paneJalan").style.zIndex = 440;
-
-map.createPane("paneFasilitas");
-map.getPane("paneFasilitas").style.zIndex = 450;
-
-map.createPane("paneWisata");
-map.getPane("paneWisata").style.zIndex = 460;
+daftarPane.forEach(([nama, zIndex]) => {
+  map.createPane(nama);
+  map.getPane(nama).style.zIndex = zIndex;
+});
 
 
 // 4. REFERENSI ELEMEN HTML
-const statusData = document.getElementById("status-data");
 const hasilDetail = document.getElementById("hasil");
 
 
@@ -85,59 +79,54 @@ const warnaLayer = {
 
 // 6. KONFIGURASI FILE GEOJSON
 // Semua file berada sejajar dengan index.html dan app.js.
-// Nama alternatif desa disediakan untuk mengantisipasi
-// perbedaan nama file pada repository.
+// Khusus batas desa/kelurahan menggunakan ekstensi .geojsons.
 
 const konfigurasiData = {
   kabupaten: {
     nama: "Batas Kabupaten",
-    files: ["administrasi_kabkota.geojson"],
+    file: "administrasi_kabkota.geojson",
     pane: "paneKabupaten"
   },
 
   kecamatan: {
     nama: "Batas Kecamatan",
-    files: ["administrasikecamatan.geojson"],
+    file: "administrasikecamatan.geojson",
     pane: "paneKecamatan"
   },
 
   desa: {
     nama: "Batas Desa/Kelurahan",
-    files: [
-      "bataskelurahandesa.geojsons",
-      "bataswilayahkelurahandesa.geojson",
-      "bataskelurahandesa.geojson"
-    ],
+    file: "bataskelurahandesa.geojsons",
     pane: "paneDesa"
   },
 
   jalan: {
     nama: "Jaringan Jalan",
-    files: ["jalan.geojson"],
+    file: "jalan.geojson",
     pane: "paneJalan"
   },
 
   pantai: {
     nama: "Garis Pantai",
-    files: ["garispantai.geojson"],
+    file: "garispantai.geojson",
     pane: "panePantai"
   },
 
   permukiman: {
     nama: "Permukiman",
-    files: ["permukiman.geojson"],
+    file: "permukiman.geojson",
     pane: "paneFasilitas"
   },
 
   bangunan: {
     nama: "Bangunan",
-    files: ["bangunan.geojson"],
+    file: "bangunan.geojson",
     pane: "paneFasilitas"
   },
 
   pemerintahan: {
     nama: "Pemerintahan",
-    files: ["pemerintahan.geojson"],
+    file: "pemerintahan.geojson",
     pane: "paneFasilitas"
   }
 };
@@ -358,72 +347,45 @@ function buatGeoJSON(data, jenis) {
 }
 
 
-// 12. FUNGSI MEMBACA FILE GEOJSON DENGAN ALTERNATIF NAMA
-async function bacaGeoJSON(daftarFile) {
-  let errorTerakhir = null;
+// 12. FUNGSI MEMBACA FILE GEOJSON
+async function bacaGeoJSON(namaFile) {
+  const response = await fetch(
+    "./" + namaFile,
+    { cache: "no-cache" }
+  );
 
-  for (const namaFile of daftarFile) {
-    try {
-      const response = await fetch(
-        "./" + encodeURIComponent(namaFile),
-        { cache: "no-cache" }
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          `${namaFile}: HTTP ${response.status}`
-        );
-      }
-
-      const data = await response.json();
-
-      if (
-        !data ||
-        !["FeatureCollection", "Feature", "GeometryCollection"].includes(data.type)
-      ) {
-        throw new Error(`${namaFile}: format GeoJSON tidak valid.`);
-      }
-
-      return {
-        data: data,
-        file: namaFile
-      };
-
-    } catch (error) {
-      errorTerakhir = error;
-      console.warn("Gagal membaca:", namaFile, error.message);
-    }
+  if (!response.ok) {
+    throw new Error(`${namaFile}: HTTP ${response.status}`);
   }
 
-  throw errorTerakhir || new Error("File tidak ditemukan.");
+  const teks = await response.text();
+
+  let data;
+
+  try {
+    data = JSON.parse(teks);
+  } catch (error) {
+    throw new Error(`${namaFile}: isi file bukan JSON yang valid.`);
+  }
+
+  if (
+    !data ||
+    !["FeatureCollection", "Feature", "GeometryCollection"].includes(data.type)
+  ) {
+    throw new Error(`${namaFile}: struktur GeoJSON tidak valid.`);
+  }
+
+  return data;
 }
 
 
-// 13. STATUS PEMUATAN DATA
-function tampilkanStatus(jenis, status, pesan) {
-  const elemen = document.getElementById(`status-${jenis}`);
-
-  if (!elemen) return;
-
-  elemen.className = "status-row " + status;
-  elemen.textContent = pesan;
-}
-
-
-// 14. MEMUAT SETIAP LAYER
+// 13. MEMUAT SETIAP LAYER
 async function muatLayer(jenis) {
   const konfigurasi = konfigurasiData[jenis];
 
-  tampilkanStatus(
-    jenis,
-    "status-loading",
-    `${konfigurasi.nama}: sedang dimuat...`
-  );
-
   try {
-    const hasilBaca = await bacaGeoJSON(konfigurasi.files);
-
-    const layer = buatGeoJSON(hasilBaca.data, jenis);
+    const data = await bacaGeoJSON(konfigurasi.file);
+    const layer = buatGeoJSON(data, jenis);
 
     layerData[jenis] = layer;
 
@@ -435,29 +397,15 @@ async function muatLayer(jenis) {
       layer.addTo(map);
     }
 
-    const jumlahFitur = layer.getLayers().length;
-
-    tampilkanStatus(
-      jenis,
-      "status-success",
-      `✓ ${konfigurasi.nama}: ${jumlahFitur.toLocaleString("id-ID")} objek`
-    );
-
     console.log(
-      `Berhasil memuat ${konfigurasi.nama}`,
-      hasilBaca.file,
-      hasilBaca.data
+      `${konfigurasi.nama} berhasil dimuat:`,
+      konfigurasi.file,
+      `${layer.getLayers().length} objek`
     );
 
     return true;
 
   } catch (error) {
-    tampilkanStatus(
-      jenis,
-      "status-error",
-      `✕ ${konfigurasi.nama}: ${error.message}`
-    );
-
     console.error(
       `Gagal memuat ${konfigurasi.nama}:`,
       error
@@ -468,33 +416,19 @@ async function muatLayer(jenis) {
 }
 
 
-// 15. MEMUAT SEMUA DATA SPASIAL
+// 14. MEMUAT SEMUA DATA
 async function muatSemuaData() {
-  statusData.innerHTML = "";
-
-  for (const jenis of Object.keys(konfigurasiData)) {
-    const baris = document.createElement("div");
-
-    baris.id = `status-${jenis}`;
-    baris.className = "status-row status-loading";
-    baris.textContent = `${konfigurasiData[jenis].nama}: menunggu...`;
-
-    statusData.appendChild(baris);
-  }
+  const jenisLayer = Object.keys(konfigurasiData);
 
   const hasil = await Promise.all(
-    Object.keys(konfigurasiData).map(jenis => muatLayer(jenis))
+    jenisLayer.map(jenis => muatLayer(jenis))
   );
 
   const berhasil = hasil.filter(Boolean).length;
 
-  const ringkasan = document.createElement("div");
-  ringkasan.style.marginTop = "10px";
-  ringkasan.style.fontWeight = "bold";
-  ringkasan.textContent =
-    `${berhasil} dari ${hasil.length} layer berhasil dimuat.`;
-
-  statusData.appendChild(ringkasan);
+  console.log(
+    `Pemuatan layer selesai: ${berhasil} dari ${hasil.length} layer.`
+  );
 
   // Atur tampilan peta berdasarkan batas kabupaten
   if (
@@ -509,8 +443,6 @@ async function muatSemuaData() {
       }
     );
   } else {
-    // Jika batas kabupaten gagal dimuat, gunakan batas
-    // layer lain yang berhasil dibaca.
     const boundsGabungan = L.latLngBounds([]);
 
     Object.values(layerData).forEach(layer => {
@@ -526,14 +458,10 @@ async function muatSemuaData() {
       });
     }
   }
-
-  console.log(
-    `Pemuatan selesai: ${berhasil}/${hasil.length} layer berhasil.`
-  );
 }
 
 
-// 16. FILTER CHECKBOX LAYER
+// 15. FILTER CHECKBOX LAYER
 document.querySelectorAll("input[data-layer]").forEach(checkbox => {
   checkbox.addEventListener("change", function () {
     const jenis = this.dataset.layer;
@@ -552,11 +480,7 @@ document.querySelectorAll("input[data-layer]").forEach(checkbox => {
 
     if (!layer) {
       if (this.checked) {
-        tampilkanStatus(
-          jenis,
-          "status-error",
-          "✕ Data belum berhasil dimuat."
-        );
+        console.warn(`Layer ${jenis} belum tersedia.`);
       }
       return;
     }
@@ -570,7 +494,7 @@ document.querySelectorAll("input[data-layer]").forEach(checkbox => {
 });
 
 
-// 17. DATA PARIWISATA WAKATOBI
+// 16. DATA PARIWISATA WAKATOBI
 const dataWisata = [
   {
     nama: "Sombu Dive",
@@ -655,12 +579,11 @@ const dataWisata = [
 ];
 
 
-// 18. LAYER PARIWISATA
-const layerPariwisata = L.layerGroup([], {
-  pane: "paneWisata"
-});
+// 17. LAYER PARIWISATA
+const layerPariwisata = L.layerGroup();
 
 let kategoriAktif = "semua";
+
 
 function buatIkonWisata(item) {
   return L.divIcon({
@@ -744,7 +667,7 @@ function tampilkanWisata() {
 }
 
 
-// 19. FILTER KATEGORI WISATA
+// 18. FILTER KATEGORI WISATA
 document.querySelectorAll(".chip").forEach(button => {
   button.addEventListener("click", function () {
     document.querySelectorAll(".chip").forEach(chip => {
@@ -760,18 +683,18 @@ document.querySelectorAll(".chip").forEach(button => {
 });
 
 
-// 20. INISIALISASI WISATA DAN DATA SPASIAL
+// 19. INISIALISASI WISATA DAN DATA
 tampilkanWisata();
 muatSemuaData();
 
 
-// 21. SKALA PETA
+// 20. SKALA PETA
 L.control.scale({
   imperial: false,
   metric: true
 }).addTo(map);
 
 
-// 22. INFORMASI AWAL
+// 21. INFORMASI AWAL
 console.log("WebGIS Kabupaten Wakatobi berhasil dijalankan.");
-console.log("Sumber GeoJSON: root repository GitHub Pages.");
+console.log("Sumber file GeoJSON: root repository GitHub Pages.");
