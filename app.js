@@ -74,15 +74,13 @@ const warnaLayer = {
   desa: "#eeeeee",
   jalan: "#ff3b30",
   pantai: "#00e5ff",
-  permukiman: "#e67e22",
+  permukiman: "#2a9d8f",
   bangunan: "#e84393",
   pemerintahan: "#8e44ad"
 };
 
 
 // 6. KONFIGURASI FILE GEOJSON
-// Pastikan semua nama file sama persis dengan repository.
-
 const konfigurasiData = {
   kabupaten: {
     nama: "Batas Kabupaten",
@@ -399,7 +397,6 @@ function buatGeoJSON(data, jenis) {
       return styleGeoJSON(jenis);
     },
 
-    // Simbol khusus untuk geometri titik.
     pointToLayer: function (feature, latlng) {
       return L.marker(latlng, {
         icon: buatIkonGeoJSON(jenis),
@@ -465,10 +462,14 @@ function buatGeoJSON(data, jenis) {
 }
 
 
-// 15. MENGAMBIL KOORDINAT UNTUK PEMERIKSAAN
+// 15. MENGUMPULKAN KOORDINAT GEOJSON
+// Memeriksa koordinat dari FeatureCollection,
+// Feature, dan GeometryCollection.
+
 function kumpulkanKoordinat(objek, hasil = []) {
   if (!objek) return hasil;
 
+  // Jika objek merupakan pasangan koordinat [longitude, latitude].
   if (
     Array.isArray(objek) &&
     objek.length >= 2 &&
@@ -479,8 +480,26 @@ function kumpulkanKoordinat(objek, hasil = []) {
     return hasil;
   }
 
+  // Jika berupa kumpulan array koordinat.
   if (Array.isArray(objek)) {
     objek.forEach(item => kumpulkanKoordinat(item, hasil));
+  }
+
+  return hasil;
+}
+
+
+function ambilKoordinatGeometri(geometri, hasil = []) {
+  if (!geometri) return hasil;
+
+  if (geometri.type === "GeometryCollection") {
+    if (Array.isArray(geometri.geometries)) {
+      geometri.geometries.forEach(item => {
+        ambilKoordinatGeometri(item, hasil);
+      });
+    }
+  } else if (geometri.coordinates) {
+    kumpulkanKoordinat(geometri.coordinates, hasil);
   }
 
   return hasil;
@@ -493,12 +512,17 @@ function normalisasiGeoJSON(data, namaFile) {
     throw new Error(`${namaFile}: data kosong atau tidak valid.`);
   }
 
-  // Jika file hanya berisi satu geometri.
-  if (
-    data.type !== "FeatureCollection" &&
-    data.type !== "Feature" &&
-    data.type !== "GeometryCollection"
-  ) {
+  // Geometry tunggal dibungkus menjadi Feature.
+  const tipeGeometri = [
+    "Point",
+    "MultiPoint",
+    "LineString",
+    "MultiLineString",
+    "Polygon",
+    "MultiPolygon"
+  ];
+
+  if (tipeGeometri.includes(data.type)) {
     data = {
       type: "Feature",
       properties: {},
@@ -506,17 +530,12 @@ function normalisasiGeoJSON(data, namaFile) {
     };
   }
 
-  // GeometryCollection dibungkus menjadi FeatureCollection.
+  // GeometryCollection dibungkus menjadi Feature.
   if (data.type === "GeometryCollection") {
     data = {
-      type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          properties: {},
-          geometry: data
-        }
-      ]
+      type: "Feature",
+      properties: {},
+      geometry: data
     };
   }
 
@@ -541,13 +560,22 @@ function normalisasiGeoJSON(data, namaFile) {
     throw new Error(`${namaFile}: tidak memiliki fitur.`);
   }
 
-  // Memastikan koordinat sesuai format GeoJSON WGS84.
-  const koordinat = kumpulkanKoordinat(data);
+  // Mengumpulkan koordinat dari seluruh fitur.
+  const koordinat = [];
+
+  data.features.forEach(fitur => {
+    if (fitur && fitur.geometry) {
+      ambilKoordinatGeometri(fitur.geometry, koordinat);
+    }
+  });
 
   if (koordinat.length === 0) {
-    throw new Error(`${namaFile}: tidak ditemukan koordinat geometri.`);
+    throw new Error(
+      `${namaFile}: tidak ditemukan koordinat geometri.`
+    );
   }
 
+  // Memastikan koordinat menggunakan WGS84.
   const koordinatTidakValid = koordinat.find(([lon, lat]) => {
     return (
       !Number.isFinite(lon) ||
@@ -818,7 +846,7 @@ const dataWisata = [
     kategori: "wisata-sejarah",
     lat: -5.2800,
     lng: 123.5900,
-    ikon: "fa-landmark",
+    ikon: "fa-landmark-dome",
     warna: "#8e44ad"
   }
 ];
