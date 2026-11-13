@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -7,31 +6,22 @@
   <title>WebGIS Kabupaten Wakatobi</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="./style.css">
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-
   <header>
-    <div class="header-title">
-      <i class="fa-solid fa-map-location-dot"></i>
-      <h1>WebGIS Kabupaten Wakatobi (Wangi-Wangi, Kaledupa, Tomia, Binongko)</h1>
-    </div>
+    <i class="fa-solid fa-map-location-dot"></i>
+    WebGIS Kabupaten Wakatobi (Wangi-Wangi, Kaledupa, Tomia, Binongko)
   </header>
 
-  <div id="panel">
+  <main>
+    <aside id="panel">
 
-    <label class="judul-filter">
-      <b><i class="fa-solid fa-filter"></i> Filter Objek</b>
-    </label>
-
-    <div class="card filter-card">
-
-      <div class="filter-section">
-        <b class="filter-subtitle">Batas dan Jaringan</b>
+      <section>
+        <h3><i class="fa-solid fa-filter"></i> Filter Objek</h3>
+        <h4>Batas dan Jaringan</h4>
 
         <label class="filter-check">
           <input type="checkbox" data-layer="kabupaten" checked>
@@ -57,12 +47,10 @@
           <input type="checkbox" data-layer="pantai" checked>
           Garis Pantai
         </label>
-      </div>
+      </section>
 
-      <hr>
-
-      <div class="filter-section">
-        <b class="filter-subtitle">Penggunaan Lahan dan Fasilitas</b>
+      <section>
+        <h4>Penggunaan Lahan dan Fasilitas</h4>
 
         <label class="filter-check">
           <input type="checkbox" data-layer="permukiman">
@@ -78,48 +66,106 @@
           <input type="checkbox" data-layer="pemerintahan">
           Pemerintahan
         </label>
-      </div>
+      </section>
 
-      <hr>
-
-      <div class="filter-section">
-        <b class="filter-subtitle">Pariwisata</b>
+      <section>
+        <h4>Pariwisata</h4>
 
         <label class="filter-check">
           <input type="checkbox" data-layer="pariwisata" checked>
           Tampilkan Pariwisata
         </label>
 
-        <div class="chips-container">
+        <div class="chip-container">
           <button class="chip active" data-category="semua">Semua</button>
-          <button class="chip active" data-category="wisata-bahari">Wisata Bahari</button>
-          <button class="chip active" data-category="wisata-pantai">Wisata Pantai</button>
-          <button class="chip active" data-category="wisata-alam">Wisata Alam</button>
-          <button class="chip active" data-category="wisata-budaya">Wisata Budaya</button>
-          <button class="chip active" data-category="wisata-sejarah">Wisata Sejarah</button>
+          <button class="chip" data-category="wisata-bahari">Wisata Bahari</button>
+          <button class="chip" data-category="wisata-pantai">Wisata Pantai</button>
+          <button class="chip" data-category="wisata-alam">Wisata Alam</button>
+          <button class="chip" data-category="wisata-budaya">Wisata Budaya</button>
+          <button class="chip" data-category="wisata-sejarah">Wisata Sejarah</button>
         </div>
+      </section>
+
+      <section>
+        <h4>Data Spasial Lainnya</h4>
+        <div id="status-data">Memuat data spasial...</div>
+      </section>
+
+      <section class="legend-section">
+        <h3><i class="fa-solid fa-map"></i> Legenda Peta</h3>
+
+        <div class="legend-item">
+          <span class="legend-area kab"></span>
+          Batas Kabupaten
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-area kec"></span>
+          Batas Kecamatan
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-area desa"></span>
+          Batas Desa/Kelurahan
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-line jalan"></span>
+          Jaringan Jalan
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-line pantai"></span>
+          Garis Pantai
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-dot permukiman"></span>
+          Permukiman
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-dot bangunan"></span>
+          Bangunan
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-dot pemerintah"></span>
+          Pemerintahan
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-dot wisata"></span>
+          Pariwisata
+        </div>
+      </section>
+
+      <section>
+        <h3><i class="fa-solid fa-circle-info"></i> Detail Objek</h3>
+        <div id="hasil">
+          <i class="fa-solid fa-hand-pointer"></i>
+          <p>Klik ikon, garis, atau area di peta.</p>
+        </div>
+      </section>
+
+    </aside>
+
+    <div id="map">
+      <div class="basemap-control">
+        <label>
+          <input type="radio" name="basemap" value="satelit" checked>
+          Citra Satelit
+        </label>
+
+        <label>
+          <input type="radio" name="basemap" value="osm">
+          OpenStreetMap
+        </label>
       </div>
-
     </div>
+  </main>
 
-    <hr>
-
-    <h4>
-      <i class="fa-solid fa-circle-info"></i> Detail Objek
-    </h4>
-
-    <div id="hasil">
-      <div class="empty-state">
-        <i class="fa-solid fa-hand-pointer"></i>
-        <p>Klik ikon, garis, atau area di peta.</p>
-      </div>
-    </div>
-
-  </div>
-
-  <div id="map"></div>
-
-  <script src="./app.js"></script>
-
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
