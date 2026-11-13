@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebGIS Kabupaten Wakatobi</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="./style.css">
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+
+<body>
+
+  <header>
+    <div class="header-title">
+      <i class="fa-solid fa-map-location-dot"></i>
+      <h1>WebGIS Kabupaten Wakatobi (Wangi-Wangi, Kaledupa, Tomia, Binongko)</h1>
+    </div>
+  </header>
+
+  <div id="panel">
+
+    <label class="judul-filter">
+      <b><i class="fa-solid fa-filter"></i> Filter Objek</b>
+    </label>
+
+    <div class="card filter-card">
+
+      <div class="filter-section">
+        <b class="filter-subtitle">Batas dan Jaringan</b>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="kabupaten" checked>
+          Batas Kabupaten
+        </label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="kecamatan" checked>
+          Batas Kecamatan
+        </label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="desa" checked>
+          Batas Desa/Kelurahan
+        </label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="jalan" checked>
+          Jaringan Jalan
+        </label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="pantai" checked>
+          Garis Pantai
+        </label>
+      </div>
+
+      <hr>
+
+      <div class="filter-section">
+        <b class="filter-subtitle">Penggunaan Lahan dan Fasilitas</b>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="permukiman">
+          Permukiman
+        </label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="bangunan">
+          Bangunan
+        </label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="pemerintahan">
+          Pemerintahan
+        </label>
+      </div>
+
+      <hr>
+
+      <div class="filter-section">
+        <b class="filter-subtitle">Pariwisata</b>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="pariwisata" checked>
+          Tampilkan Pariwisata
+        </label>
+
+        <div class="chips-container">
+          <button class="chip active" data-category="semua">Semua</button>
+          <button class="chip active" data-category="wisata-bahari">Wisata Bahari</button>
+          <button class="chip active" data-category="wisata-pantai">Wisata Pantai</button>
+          <button class="chip active" data-category="wisata-alam">Wisata Alam</button>
+          <button class="chip active" data-category="wisata-budaya">Wisata Budaya</button>
+          <button class="chip active" data-category="wisata-sejarah">Wisata Sejarah</button>
+        </div>
+      </div>
+
+    </div>
+
+    <hr>
+
+    <h4>
+      <i class="fa-solid fa-circle-info"></i> Detail Objek
+    </h4>
+
+    <div id="hasil">
+      <div class="empty-state">
+        <i class="fa-solid fa-hand-pointer"></i>
+        <p>Klik ikon, garis, atau area di peta.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="map"></div>
+
+  <script src="./app.js"></script>
+
+</body>
+</html>
