@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
     desa: "#eeeeee",
     jalan: "#ff3b30",
     pantai: "#00e5ff",
-    permukiman: "#2a9d8f",
+    permukiman: "#8e44ad",
     bangunan: "#e84393",
     pemerintahan: "#8e44ad"
   };
@@ -311,8 +311,12 @@ document.addEventListener("DOMContentLoaded", function () {
       pengaturan.fillOpacity = 0;
     }
 
+    // PERMUKIMAN: POLIGON BERWARNA UNGU
     if (jenis === "permukiman") {
-      pengaturan.weight = 1;
+      pengaturan.color = "#8e44ad";
+      pengaturan.fillColor = "#8e44ad";
+      pengaturan.weight = 1.5;
+      pengaturan.opacity = 1;
       pengaturan.fillOpacity = 0.45;
     }
 
