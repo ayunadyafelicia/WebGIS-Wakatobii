@@ -19,7 +19,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  // Pastikan elemen peta memiliki ukuran
   if (mapElement.getBoundingClientRect().height < 100) {
     mapElement.style.minHeight = "500px";
     mapElement.style.height = "600px";
@@ -318,7 +317,6 @@ document.addEventListener("DOMContentLoaded", function () {
       pengaturan.weight = 1.8;
       pengaturan.opacity = 1;
       pengaturan.fillOpacity = 0.55;
-      pengaturan.fill = true;
     }
 
     if (jenis === "bangunan") {
@@ -414,7 +412,7 @@ document.addEventListener("DOMContentLoaded", function () {
           );
         });
 
-        // HOVER: MEMPERTAHANKAN WARNA ASLI SETIAP LAYER
+        // HOVER TANPA MENGUBAH WARNA ASLI
         layer.on("mouseover", function () {
           if (layer.setStyle) {
             layer.setStyle({
@@ -424,7 +422,7 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         });
 
-        // KEMBALIKAN STYLE SEMULA SAAT KURSOR KELUAR
+        // KEMBALIKAN STYLE SEMULA
         layer.on("mouseout", function () {
           if (layer.setStyle) {
             layer.setStyle(styleGeoJSON(jenis));
@@ -604,18 +602,6 @@ document.addEventListener("DOMContentLoaded", function () {
         throw new Error(
           `${konfigurasi.file}: tidak ada geometri yang dapat ditampilkan.`
         );
-      }
-
-      // PASTIKAN PERMUKIMAN SELALU MENGGUNAKAN WARNA UNGU
-      if (jenis === "permukiman") {
-        layer.setStyle({
-          color: "#8e44ad",
-          fillColor: "#8e44ad",
-          weight: 1.8,
-          opacity: 1,
-          fillOpacity: 0.55,
-          fill: true
-        });
       }
 
       layerData[jenis] = layer;
