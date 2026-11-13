@@ -1,7 +1,7 @@
 
 // ======================================================
 // WEBGIS KABUPATEN WAKATOBI
-// Membaca seluruh GeoJSON langsung dari ROOT repository
+// Membaca GeoJSON langsung dari ROOT repository
 // ======================================================
 
 
@@ -43,7 +43,7 @@ document.querySelectorAll('input[name="basemap"]').forEach(input => {
 });
 
 
-// 3. PANE UNTUK MENGATUR URUTAN LAYER
+// 3. PANE LAYER
 const daftarPane = [
   ["paneKabupaten", 410],
   ["paneKecamatan", 420],
@@ -63,7 +63,7 @@ daftarPane.forEach(([nama, zIndex]) => {
 });
 
 
-// 4. REFERENSI ELEMEN HTML
+// 4. REFERENSI HTML
 const hasilDetail = document.getElementById("hasil");
 
 
@@ -81,7 +81,7 @@ const warnaLayer = {
 
 
 // 6. KONFIGURASI FILE GEOJSON
-// Semua file berada sejajar dengan index.html dan app.js.
+// Pastikan semua nama file sama persis dengan repository.
 
 const konfigurasiData = {
   kabupaten: {
@@ -146,7 +146,18 @@ const konfigurasiData = {
 const layerData = {};
 
 
-// 8. FUNGSI MEMBACA NILAI REMARK
+// 8. FUNGSI MENGAMANKAN TEKS HTML
+function escapeHTML(nilai) {
+  return String(nilai)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+
+// 9. FUNGSI MENGAMBIL ATRIBUT REMARK
 function ambilRemark(properties = {}) {
   const keyRemark = Object.keys(properties).find(key => {
     return key.toLowerCase().trim() === "remark";
@@ -168,7 +179,7 @@ function ambilRemark(properties = {}) {
 }
 
 
-// 9. FUNGSI MENGAMBIL NAMA PROPERTI
+// 10. FUNGSI MENGAMBIL NAMA OBJEK
 function ambilNama(properties = {}) {
   const kandidat = [
     "nama",
@@ -201,28 +212,14 @@ function ambilNama(properties = {}) {
 
   const remark = ambilRemark(properties);
 
-  if (remark) return remark;
-
-  return "Objek tanpa nama";
+  return remark || "Objek tanpa nama";
 }
 
 
-// 10. FUNGSI MENGAMANKAN TEKS HTML
-function escapeHTML(nilai) {
-  return String(nilai)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-
-// 11. FUNGSI MENAMPILKAN DETAIL OBJEK
+// 11. FUNGSI DETAIL OBJEK
 function tampilkanDetail(properties, layer, jenis) {
   if (!hasilDetail) return;
 
-  // Nama layer bangunan selalu ditulis "Bangunan".
   const nama = jenis === "Bangunan"
     ? "Bangunan"
     : ambilNama(properties);
@@ -238,7 +235,6 @@ function tampilkanDetail(properties, layer, jenis) {
     </div>
   `;
 
-  // Tampilkan remark sebagai keterangan utama bangunan.
   if (jenis === "Bangunan") {
     html += `
       <div class="detail-row">
@@ -248,7 +244,7 @@ function tampilkanDetail(properties, layer, jenis) {
     `;
   }
 
-  // Tampilkan seluruh atribut GeoJSON.
+  // Menampilkan atribut lainnya.
   for (const [key, value] of Object.entries(properties)) {
     if (
       value === null ||
@@ -258,7 +254,6 @@ function tampilkanDetail(properties, layer, jenis) {
       continue;
     }
 
-    // Remark bangunan sudah ditampilkan sebagai keterangan utama.
     if (
       jenis === "Bangunan" &&
       key.toLowerCase().trim() === "remark"
@@ -274,7 +269,6 @@ function tampilkanDetail(properties, layer, jenis) {
     `;
   }
 
-  // Koordinat objek.
   if (layer.getBounds && layer.getBounds().isValid()) {
     const center = layer.getBounds().getCenter();
 
@@ -305,7 +299,7 @@ function tampilkanDetail(properties, layer, jenis) {
 }
 
 
-// 12. FUNGSI STYLE GEOJSON
+// 12. STYLE GEOJSON
 function styleGeoJSON(jenis) {
   const warna = warnaLayer[jenis];
 
@@ -329,8 +323,8 @@ function styleGeoJSON(jenis) {
   }
 
   if (jenis === "desa") {
-    pengaturan.weight = 1;
-    pengaturan.fillOpacity = 0.02;
+    pengaturan.weight = 1.2;
+    pengaturan.fillOpacity = 0.04;
     pengaturan.dashArray = "3, 3";
   }
 
@@ -368,9 +362,6 @@ function styleGeoJSON(jenis) {
 function buatIkonGeoJSON(jenis) {
   const konfigurasi = konfigurasiData[jenis];
 
-  const warna = warnaLayer[jenis];
-  const ikon = konfigurasi.ikon;
-
   return L.divIcon({
     className: "geojson-custom-icon",
 
@@ -381,14 +372,14 @@ function buatIkonGeoJSON(jenis) {
         display: flex;
         align-items: center;
         justify-content: center;
-        background: ${warna};
+        background: ${warnaLayer[jenis]};
         color: #ffffff;
         border: 2px solid #ffffff;
         border-radius: 50%;
         box-shadow: 0 2px 6px rgba(0,0,0,0.45);
         font-size: 14px;
       ">
-        <i class="fa-solid ${ikon}"></i>
+        <i class="fa-solid ${konfigurasi.ikon}"></i>
       </div>
     `,
 
@@ -399,7 +390,7 @@ function buatIkonGeoJSON(jenis) {
 }
 
 
-// 14. FUNGSI MEMBUAT GEOJSON LAYER
+// 14. MEMBUAT LAYER GEOJSON
 function buatGeoJSON(data, jenis) {
   return L.geoJSON(data, {
     pane: konfigurasiData[jenis].pane,
@@ -408,7 +399,7 @@ function buatGeoJSON(data, jenis) {
       return styleGeoJSON(jenis);
     },
 
-    // Simbol untuk seluruh objek bertipe titik.
+    // Simbol khusus untuk geometri titik.
     pointToLayer: function (feature, latlng) {
       return L.marker(latlng, {
         icon: buatIkonGeoJSON(jenis),
@@ -425,26 +416,26 @@ function buatGeoJSON(data, jenis) {
 
       const remark = ambilRemark(properties);
 
-      let isiPopup = `
+      let popup = `
         <strong>${escapeHTML(nama)}</strong>
         <br>
         ${escapeHTML(konfigurasiData[jenis].nama)}
       `;
 
       if (jenis === "bangunan") {
-        isiPopup += `
+        popup += `
           <br>
           <strong>Keterangan:</strong>
           ${remark ? escapeHTML(remark) : "Tidak tersedia"}
         `;
       }
 
-      isiPopup += `
+      popup += `
         <br><br>
         Klik objek untuk melihat detail.
       `;
 
-      layer.bindPopup(isiPopup);
+      layer.bindPopup(popup);
 
       layer.on("click", function () {
         tampilkanDetail(
@@ -454,7 +445,6 @@ function buatGeoJSON(data, jenis) {
         );
       });
 
-      // Efek hover hanya diterapkan pada geometri yang mendukung setStyle.
       layer.on("mouseover", function () {
         if (layer.setStyle) {
           layer.setStyle({
@@ -475,18 +465,120 @@ function buatGeoJSON(data, jenis) {
 }
 
 
-// 15. FUNGSI MEMBACA FILE GEOJSON
+// 15. MENGAMBIL KOORDINAT UNTUK PEMERIKSAAN
+function kumpulkanKoordinat(objek, hasil = []) {
+  if (!objek) return hasil;
+
+  if (
+    Array.isArray(objek) &&
+    objek.length >= 2 &&
+    typeof objek[0] === "number" &&
+    typeof objek[1] === "number"
+  ) {
+    hasil.push([objek[0], objek[1]]);
+    return hasil;
+  }
+
+  if (Array.isArray(objek)) {
+    objek.forEach(item => kumpulkanKoordinat(item, hasil));
+  }
+
+  return hasil;
+}
+
+
+// 16. NORMALISASI GEOJSON
+function normalisasiGeoJSON(data, namaFile) {
+  if (!data || typeof data !== "object") {
+    throw new Error(`${namaFile}: data kosong atau tidak valid.`);
+  }
+
+  // Jika file hanya berisi satu geometri.
+  if (
+    data.type !== "FeatureCollection" &&
+    data.type !== "Feature" &&
+    data.type !== "GeometryCollection"
+  ) {
+    data = {
+      type: "Feature",
+      properties: {},
+      geometry: data
+    };
+  }
+
+  // GeometryCollection dibungkus menjadi FeatureCollection.
+  if (data.type === "GeometryCollection") {
+    data = {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: {},
+          geometry: data
+        }
+      ]
+    };
+  }
+
+  // Feature tunggal dibungkus menjadi FeatureCollection.
+  if (data.type === "Feature") {
+    data = {
+      type: "FeatureCollection",
+      features: [data]
+    };
+  }
+
+  if (
+    data.type !== "FeatureCollection" ||
+    !Array.isArray(data.features)
+  ) {
+    throw new Error(
+      `${namaFile}: struktur FeatureCollection tidak valid.`
+    );
+  }
+
+  if (data.features.length === 0) {
+    throw new Error(`${namaFile}: tidak memiliki fitur.`);
+  }
+
+  // Memastikan koordinat sesuai format GeoJSON WGS84.
+  const koordinat = kumpulkanKoordinat(data);
+
+  if (koordinat.length === 0) {
+    throw new Error(`${namaFile}: tidak ditemukan koordinat geometri.`);
+  }
+
+  const koordinatTidakValid = koordinat.find(([lon, lat]) => {
+    return (
+      !Number.isFinite(lon) ||
+      !Number.isFinite(lat) ||
+      Math.abs(lon) > 180 ||
+      Math.abs(lat) > 90
+    );
+  });
+
+  if (koordinatTidakValid) {
+    throw new Error(
+      `${namaFile}: koordinat di luar rentang longitude-latitude. ` +
+      `Data perlu dikonversi ke WGS84 (EPSG:4326) terlebih dahulu.`
+    );
+  }
+
+  return data;
+}
+
+
+// 17. MEMBACA FILE GEOJSON
 async function bacaGeoJSON(namaFile) {
-  const response = await fetch(
-    "./" + namaFile,
-    {
-      cache: "no-cache"
-    }
-  );
+  const urlFile = new URL(namaFile, document.baseURI);
+
+  const response = await fetch(urlFile.href, {
+    cache: "no-store"
+  });
 
   if (!response.ok) {
     throw new Error(
-      `${namaFile}: HTTP ${response.status}`
+      `${namaFile}: HTTP ${response.status}. Periksa nama file dan lokasi repository.`
     );
   }
 
@@ -498,27 +590,15 @@ async function bacaGeoJSON(namaFile) {
     data = JSON.parse(teks);
   } catch (error) {
     throw new Error(
-      `${namaFile}: isi file bukan JSON yang valid.`
+      `${namaFile}: isi file bukan JSON yang valid. Pastikan file benar-benar GeoJSON, bukan ZIP atau shapefile.`
     );
   }
 
-  const tipeGeoJSON = [
-    "FeatureCollection",
-    "Feature",
-    "GeometryCollection"
-  ];
-
-  if (!data || !tipeGeoJSON.includes(data.type)) {
-    throw new Error(
-      `${namaFile}: struktur GeoJSON tidak valid.`
-    );
-  }
-
-  return data;
+  return normalisasiGeoJSON(data, namaFile);
 }
 
 
-// 16. MEMERIKSA BOUNDS LAYER
+// 18. MEMERIKSA BOUNDS LAYER
 function boundsValid(layer) {
   if (!layer || typeof layer.getBounds !== "function") {
     return false;
@@ -530,7 +610,7 @@ function boundsValid(layer) {
 }
 
 
-// 17. MEMUAT SETIAP LAYER
+// 19. MEMUAT SETIAP LAYER
 async function muatLayer(jenis) {
   const konfigurasi = konfigurasiData[jenis];
 
@@ -538,6 +618,12 @@ async function muatLayer(jenis) {
     const data = await bacaGeoJSON(konfigurasi.file);
 
     const layer = buatGeoJSON(data, jenis);
+
+    if (layer.getLayers().length === 0) {
+      throw new Error(
+        `${konfigurasi.file}: tidak ada geometri yang dapat ditampilkan.`
+      );
+    }
 
     layerData[jenis] = layer;
 
@@ -550,17 +636,20 @@ async function muatLayer(jenis) {
     }
 
     console.log(
-      `${konfigurasi.nama} berhasil dibaca:`,
-      konfigurasi.file,
-      `${layer.getLayers().length} objek`
+      `BERHASIL: ${konfigurasi.nama}`,
+      `| File: ${konfigurasi.file}`,
+      `| Jumlah fitur: ${layer.getLayers().length}`,
+      `| Bounds:`,
+      boundsValid(layer) ? layer.getBounds().toBBoxString() : "Tidak tersedia"
     );
 
     return true;
 
   } catch (error) {
     console.error(
-      `Gagal memuat ${konfigurasi.nama}:`,
-      error.message
+      `GAGAL: ${konfigurasi.nama}`,
+      `| File: ${konfigurasi.file}`,
+      `| Penyebab: ${error.message}`
     );
 
     return false;
@@ -568,7 +657,7 @@ async function muatLayer(jenis) {
 }
 
 
-// 18. MEMUAT SEMUA DATA GEOJSON
+// 20. MEMUAT SEMUA DATA GEOJSON
 async function muatSemuaData() {
   const jenisLayer = Object.keys(konfigurasiData);
 
@@ -579,10 +668,10 @@ async function muatSemuaData() {
   const berhasil = hasil.filter(Boolean).length;
 
   console.log(
-    `Pemuatan layer selesai: ${berhasil} dari ${hasil.length} layer.`
+    `Pemuatan selesai: ${berhasil} dari ${hasil.length} layer berhasil dibaca.`
   );
 
-  // Prioritaskan batas kabupaten sebagai tampilan awal.
+  // Fokus awal berdasarkan batas kabupaten.
   if (
     layerData.kabupaten &&
     boundsValid(layerData.kabupaten)
@@ -598,7 +687,7 @@ async function muatSemuaData() {
     return;
   }
 
-  // Jika batas kabupaten gagal, gunakan gabungan bounds layer lain.
+  // Jika batas kabupaten gagal, gunakan layer lain.
   const boundsGabungan = L.latLngBounds([]);
 
   Object.values(layerData).forEach(layer => {
@@ -608,18 +697,15 @@ async function muatSemuaData() {
   });
 
   if (boundsGabungan.isValid()) {
-    map.fitBounds(
-      boundsGabungan,
-      {
-        padding: [20, 20],
-        maxZoom: 11
-      }
-    );
+    map.fitBounds(boundsGabungan, {
+      padding: [20, 20],
+      maxZoom: 11
+    });
   }
 }
 
 
-// 19. FILTER CHECKBOX LAYER
+// 21. FILTER CHECKBOX LAYER
 document.querySelectorAll("input[data-layer]").forEach(checkbox => {
   checkbox.addEventListener("change", function () {
     const jenis = this.dataset.layer;
@@ -638,7 +724,7 @@ document.querySelectorAll("input[data-layer]").forEach(checkbox => {
 
     if (!layer) {
       if (this.checked) {
-        console.warn(`Layer ${jenis} belum tersedia.`);
+        console.warn(`Layer ${jenis} belum tersedia atau gagal dimuat.`);
       }
 
       return;
@@ -653,7 +739,7 @@ document.querySelectorAll("input[data-layer]").forEach(checkbox => {
 });
 
 
-// 20. DATA PARIWISATA WAKATOBI
+// 22. DATA PARIWISATA WAKATOBI
 const dataWisata = [
   {
     nama: "Sombu Dive",
@@ -738,7 +824,7 @@ const dataWisata = [
 ];
 
 
-// 21. LAYER PARIWISATA
+// 23. LAYER PARIWISATA
 const layerPariwisata = L.layerGroup();
 
 let kategoriAktif = "semua";
@@ -836,7 +922,7 @@ function tampilkanWisata() {
 }
 
 
-// 22. FILTER KATEGORI WISATA
+// 24. FILTER KATEGORI WISATA
 document.querySelectorAll(".chip").forEach(button => {
   button.addEventListener("click", function () {
     document.querySelectorAll(".chip").forEach(chip => {
@@ -852,18 +938,18 @@ document.querySelectorAll(".chip").forEach(button => {
 });
 
 
-// 23. INISIALISASI WISATA DAN DATA
+// 25. INISIALISASI
 tampilkanWisata();
 muatSemuaData();
 
 
-// 24. SKALA PETA
+// 26. SKALA PETA
 L.control.scale({
   imperial: false,
   metric: true
 }).addTo(map);
 
 
-// 25. INFORMASI AWAL
+// 27. INFORMASI AWAL
 console.log("WebGIS Kabupaten Wakatobi berhasil dijalankan.");
 console.log("Sumber file GeoJSON: root repository GitHub Pages.");
