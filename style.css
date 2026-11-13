@@ -1,3 +1,28 @@
+
+/* =====================================
+   LEGENDA PETA WEBGIS WAKATOBI
+===================================== */
+
+.map-legend {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 14px 16px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  min-width: 190px;
+  max-height: 75%;
+  overflow-y: auto;
+}
+
+.map-legend h4 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .legend-item {
   display: flex;
   align-items: center;
