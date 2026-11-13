@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -87,11 +88,31 @@
       </section>
 
       <section>
-        <h4>Data Spasial Lainnya</h4>
-        <div id="status-data">Memuat data spasial...</div>
+        <h3><i class="fa-solid fa-circle-info"></i> Detail Objek</h3>
+        <div id="hasil">
+          <i class="fa-solid fa-hand-pointer"></i>
+          <p>Klik ikon, garis, atau area di peta.</p>
+        </div>
       </section>
 
-      <section class="legend-section">
+    </aside>
+
+    <div id="map">
+
+      <div class="basemap-control">
+        <label>
+          <input type="radio" name="basemap" value="satelit" checked>
+          Citra Satelit
+        </label>
+
+        <label>
+          <input type="radio" name="basemap" value="osm">
+          OpenStreetMap
+        </label>
+      </div>
+
+      <!-- LEGENDA DI ATAS PETA -->
+      <div class="map-legend">
         <h3><i class="fa-solid fa-map"></i> Legenda Peta</h3>
 
         <div class="legend-item">
@@ -138,30 +159,8 @@
           <span class="legend-dot wisata"></span>
           Pariwisata
         </div>
-      </section>
-
-      <section>
-        <h3><i class="fa-solid fa-circle-info"></i> Detail Objek</h3>
-        <div id="hasil">
-          <i class="fa-solid fa-hand-pointer"></i>
-          <p>Klik ikon, garis, atau area di peta.</p>
-        </div>
-      </section>
-
-    </aside>
-
-    <div id="map">
-      <div class="basemap-control">
-        <label>
-          <input type="radio" name="basemap" value="satelit" checked>
-          Citra Satelit
-        </label>
-
-        <label>
-          <input type="radio" name="basemap" value="osm">
-          OpenStreetMap
-        </label>
       </div>
+
     </div>
   </main>
 
