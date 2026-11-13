@@ -1,1036 +1,777 @@
-
-// =====================================================
+// ======================================================
 // WEBGIS KABUPATEN WAKATOBI
-// Leaflet + GitHub Auto GeoJSON Loader
-// =====================================================
+// Membaca GeoJSON langsung dari ROOT repository
+// ======================================================
 
 
-// =====================================================
-// 1. PETA
-// =====================================================
-
+// 1. INISIALISASI PETA
 const map = L.map("map", {
   preferCanvas: true
-}).setView([-5.3, 123.6], 9);
+}).setView([-5.3250, 123.5880], 10);
 
 
-// =====================================================
 // 2. BASEMAP
-// =====================================================
-
-const satelit = L.tileLayer(
+const basemapSatelit = L.tileLayer(
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
   {
-    attribution: "Tiles &copy; Esri"
+    attribution: "Tiles © Esri",
+    maxZoom: 19
   }
 );
 
-const osm = L.tileLayer(
+const basemapOSM = L.tileLayer(
   "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   {
-    attribution: "&copy; OpenStreetMap"
+    attribution: "© OpenStreetMap contributors",
+    maxZoom: 19
   }
 );
 
-satelit.addTo(map);
+basemapSatelit.addTo(map);
 
-L.control.layers(
-  {
-    "Citra Satelit": satelit,
-    "OpenStreetMap": osm
-  },
-  null,
-  {
-    collapsed: false,
-    position: "topright"
-  }
-).addTo(map);
-
-
-// =====================================================
-// 3. KONFIGURASI GITHUB
-// =====================================================
-
-const GITHUB_USER = "ayunadyafelicia";
-const GITHUB_REPO = "WebGIS-Wakatobi";
-const GITHUB_BRANCH = "main";
-
-const GITHUB_API =
-  `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/git/trees/${GITHUB_BRANCH}?recursive=1`;
-
-const GITHUB_RAW =
-  `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/`;
-
-
-// =====================================================
-// 4. VARIABEL LAYER
-// =====================================================
-
-const semuaLayer = {};
-const semuaFile = [];
-
-const warnaLayer = [
-  "#e53935",
-  "#fb8c00",
-  "#fdd835",
-  "#8e24aa",
-  "#00897b",
-  "#3949ab",
-  "#d81b60",
-  "#6d4c41",
-  "#039be5",
-  "#7cb342",
-  "#5e35b1",
-  "#f4511e",
-  "#546e7a",
-  "#c0ca33",
-  "#ec407a"
-];
-
-let indeksWarna = 0;
-
-
-// =====================================================
-// 5. FUNGSI ESCAPE HTML
-// =====================================================
-
-function escapeHTML(teks) {
-
-  return String(teks).replace(/[&<>"']/g, karakter => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  })[karakter]);
-
-}
-
-
-// =====================================================
-// 6. INFORMASI OBJEK
-// =====================================================
-
-function buatIsiInformasi(properti = {}) {
-
-  let isi = "<h3>Informasi Objek</h3>";
-  let adaData = false;
-
-  Object.entries(properti).forEach(([key, value]) => {
-
-    if (
-      value === null ||
-      value === undefined ||
-      value === "" ||
-      key.toUpperCase() === "LCODE"
-    ) return;
-
-    const label =
-      key.toUpperCase() === "REMARK"
-        ? "Jenis"
-        : key;
-
-    isi += `
-      <p>
-        <b>${escapeHTML(label)}:</b>
-        ${escapeHTML(value)}
-      </p>
-    `;
-
-    adaData = true;
-
-  });
-
-  return adaData
-    ? isi
-    : "<p>Informasi objek tidak tersedia.</p>";
-
-}
-
-
-function tampilkanInformasi(feature, layer) {
-
-  const isi = buatIsiInformasi(
-    feature.properties || {}
-  );
-
-  layer.bindPopup(isi);
-
-  layer.on("click", function() {
-
-    const hasil = document.getElementById("hasil");
-
-    if (hasil) {
-      hasil.innerHTML = isi;
+document.querySelectorAll('input[name="basemap"]').forEach(input => {
+  input.addEventListener("change", function () {
+    if (this.value === "satelit") {
+      map.removeLayer(basemapOSM);
+      basemapSatelit.addTo(map);
+    } else {
+      map.removeLayer(basemapSatelit);
+      basemapOSM.addTo(map);
     }
-
   });
-
-}
-
-
-// =====================================================
-// 7. STYLE DATA SPASIAL
-// =====================================================
-
-function buatStyle(warna) {
-
-  return {
-    color: warna,
-    weight: 2,
-    opacity: 0.9,
-    fillColor: warna,
-    fillOpacity: 0.22
-  };
-
-}
+});
 
 
-function buatMarker(latlng, warna) {
+// 3. PANE UNTUK MENGATUR URUTAN LAYER
+map.createPane("paneKabupaten");
+map.getPane("paneKabupaten").style.zIndex = 410;
 
-  return L.circleMarker(latlng, {
+map.createPane("paneKecamatan");
+map.getPane("paneKecamatan").style.zIndex = 420;
 
-    radius: 6,
-    color: "#ffffff",
-    weight: 1.5,
-    fillColor: warna,
-    fillOpacity: 0.95
+map.createPane("paneDesa");
+map.getPane("paneDesa").style.zIndex = 425;
 
-  });
+map.createPane("panePantai");
+map.getPane("panePantai").style.zIndex = 430;
 
-}
+map.createPane("paneJalan");
+map.getPane("paneJalan").style.zIndex = 440;
 
+map.createPane("paneFasilitas");
+map.getPane("paneFasilitas").style.zIndex = 450;
 
-// =====================================================
-// 8. MEMBUAT NAMA LAYER DARI NAMA FILE
-// =====================================================
-
-function namaLayerDariFile(path) {
-
-  let nama = path.split("/").pop();
-
-  nama = nama.replace(
-    /\.(geojsons|geojson|json)$/i,
-    ""
-  );
-
-  nama = nama.replace(/[_-]/g, " ");
-
-  return nama.replace(/\b\w/g, huruf =>
-    huruf.toUpperCase()
-  );
-
-}
+map.createPane("paneWisata");
+map.getPane("paneWisata").style.zIndex = 460;
 
 
-// =====================================================
-// 9. MENGHUBUNGKAN CHECKBOX HTML LAMA
-// =====================================================
+// 4. REFERENSI ELEMEN HTML
+const statusData = document.getElementById("status-data");
+const hasilDetail = document.getElementById("hasil");
 
-const hubunganCheckbox = {
 
-  kabupaten: [
-    "administrasi_kabkota"
-  ],
-
-  kecamatan: [
-    "administrasikecamatan"
-  ],
-
-  desa: [
-    "bataskelurahandesa"
-  ],
-
-  jalan: [
-    "jalan"
-  ],
-
-  permukiman: [
-    "permukiman"
-  ],
-
-  bangunan: [
-    "bangunan"
-  ],
-
-  pemerintahan: [
-    "pemerintahan"
-  ],
-
-  pantai: [
-    "garispantai"
-  ]
-
+// 5. WARNA LAYER
+const warnaLayer = {
+  kabupaten: "#f4e342",
+  kecamatan: "#ff8c42",
+  desa: "#eeeeee",
+  jalan: "#ff3b30",
+  pantai: "#00e5ff",
+  permukiman: "#e67e22",
+  bangunan: "#e84393",
+  pemerintahan: "#8e44ad"
 };
 
 
-function namaDasar(path) {
+// 6. KONFIGURASI FILE GEOJSON
+// Semua file berada sejajar dengan index.html dan app.js.
+// Nama alternatif desa disediakan untuk mengantisipasi
+// perbedaan nama file pada repository.
 
-  return path.split("/").pop()
-    .replace(/\.(geojsons|geojson|json)$/i, "")
-    .toLowerCase();
+const konfigurasiData = {
+  kabupaten: {
+    nama: "Batas Kabupaten",
+    files: ["administrasi_kabkota.geojson"],
+    pane: "paneKabupaten"
+  },
 
-}
+  kecamatan: {
+    nama: "Batas Kecamatan",
+    files: ["administrasikecamatan.geojson"],
+    pane: "paneKecamatan"
+  },
+
+  desa: {
+    nama: "Batas Desa/Kelurahan",
+    files: [
+      "bataskelurahandesa.geojsons",
+      "bataswilayahkelurahandesa.geojson",
+      "bataskelurahandesa.geojson"
+    ],
+    pane: "paneDesa"
+  },
+
+  jalan: {
+    nama: "Jaringan Jalan",
+    files: ["jalan.geojson"],
+    pane: "paneJalan"
+  },
+
+  pantai: {
+    nama: "Garis Pantai",
+    files: ["garispantai.geojson"],
+    pane: "panePantai"
+  },
+
+  permukiman: {
+    nama: "Permukiman",
+    files: ["permukiman.geojson"],
+    pane: "paneFasilitas"
+  },
+
+  bangunan: {
+    nama: "Bangunan",
+    files: ["bangunan.geojson"],
+    pane: "paneFasilitas"
+  },
+
+  pemerintahan: {
+    nama: "Pemerintahan",
+    files: ["pemerintahan.geojson"],
+    pane: "paneFasilitas"
+  }
+};
 
 
-function aturCheckboxLama(namaFile, layer) {
+// 7. PENYIMPANAN LAYER
+const layerData = {};
 
-  Object.entries(hubunganCheckbox).forEach(
-    ([namaCheckbox, daftarNama]) => {
 
-      if (!daftarNama.includes(namaFile)) return;
+// 8. FUNGSI MENGAMBIL NAMA PROPERTI
+function ambilNama(properties = {}) {
+  const kandidat = [
+    "nama",
+    "Nama",
+    "NAMA",
+    "name",
+    "NAME",
+    "namobj",
+    "NAMOBJ",
+    "WADMKC",
+    "WADMKD",
+    "WADMKK",
+    "NAMOBJ_1",
+    "kecamatan",
+    "desa",
+    "kabupaten",
+    "jenis",
+    "fungsi"
+  ];
 
-      const checkbox = document.querySelector(
-        `input[data-layer="${namaCheckbox}"]`
-      );
-
-      if (!checkbox) return;
-
-      checkbox.checked = true;
-
-      checkbox.onchange = function() {
-
-        if (this.checked) {
-          layer.addTo(map);
-        } else {
-          map.removeLayer(layer);
-        }
-
-      };
-
+  for (const key of kandidat) {
+    if (
+      properties[key] !== undefined &&
+      properties[key] !== null &&
+      String(properties[key]).trim() !== ""
+    ) {
+      return String(properties[key]);
     }
-  );
-
-}
-
-
-// =====================================================
-// 10. FILTER DATA GEOJSON TAMBAHAN
-// HTML TIDAK PERLU DIUBAH
-// =====================================================
-
-function buatFilterTambahan() {
-
-  let bagian = document.getElementById(
-    "filter-geojson-otomatis"
-  );
-
-  if (bagian) return bagian;
-
-  bagian = document.createElement("div");
-
-  bagian.id = "filter-geojson-otomatis";
-  bagian.className = "filter-section";
-
-  bagian.innerHTML = `
-    <hr>
-    <b class="filter-subtitle">
-      Data Spasial Lainnya
-    </b>
-    <div id="daftar-geojson"></div>
-  `;
-
-  const panel = document.getElementById("panel");
-
-  const detail = panel.querySelector("h4");
-
-  if (detail) {
-    panel.insertBefore(bagian, detail);
-  } else {
-    panel.appendChild(bagian);
   }
 
-  return bagian;
-
+  return "Objek tanpa nama";
 }
 
 
-function buatCheckboxOtomatis(nama, path, layer, warna) {
+// 9. FUNGSI MENAMPILKAN DETAIL OBJEK
+function tampilkanDetail(properties, layer, jenis) {
+  const nama = ambilNama(properties);
 
-  const bagian = buatFilterTambahan();
-
-  const daftar = bagian.querySelector(
-    "#daftar-geojson"
-  );
-
-  const label = document.createElement("label");
-
-  label.className = "filter-check";
-
-  label.innerHTML = `
-    <input type="checkbox" checked>
-    <span style="
-      width:12px;
-      height:12px;
-      background:${warna};
-      display:inline-block;
-      border-radius:3px;
-      flex-shrink:0;
-    "></span>
-    <span>${escapeHTML(nama)}</span>
+  let html = `
+    <div class="detail-title">${nama}</div>
+    <div class="detail-row">
+      <strong>Jenis layer:</strong> ${jenis}
+    </div>
   `;
 
-  const checkbox = label.querySelector("input");
+  let jumlah = 0;
 
-  checkbox.addEventListener("change", function() {
+  for (const [key, value] of Object.entries(properties)) {
+    if (value === null || value === undefined || value === "") {
+      continue;
+    }
+
+    html += `
+      <div class="detail-row">
+        <strong>${key}:</strong> ${String(value)}
+      </div>
+    `;
+
+    jumlah++;
+
+    if (jumlah >= 12) break;
+  }
+
+  if (layer.getBounds && layer.getBounds().isValid()) {
+    const center = layer.getBounds().getCenter();
+
+    html += `
+      <div class="detail-row">
+        <strong>Latitude:</strong> ${center.lat.toFixed(6)}
+      </div>
+      <div class="detail-row">
+        <strong>Longitude:</strong> ${center.lng.toFixed(6)}
+      </div>
+    `;
+  } else if (layer.getLatLng) {
+    const koordinat = layer.getLatLng();
+
+    html += `
+      <div class="detail-row">
+        <strong>Latitude:</strong> ${koordinat.lat.toFixed(6)}
+      </div>
+      <div class="detail-row">
+        <strong>Longitude:</strong> ${koordinat.lng.toFixed(6)}
+      </div>
+    `;
+  }
+
+  hasilDetail.innerHTML = html;
+}
+
+
+// 10. FUNGSI STYLE GEOJSON
+function styleGeoJSON(jenis) {
+  const warna = warnaLayer[jenis];
+
+  const pengaturan = {
+    color: warna,
+    weight: 1.5,
+    opacity: 0.95,
+    fillColor: warna,
+    fillOpacity: 0.12
+  };
+
+  if (jenis === "kabupaten") {
+    pengaturan.weight = 3;
+    pengaturan.fillOpacity = 0.03;
+  }
+
+  if (jenis === "kecamatan") {
+    pengaturan.weight = 2;
+    pengaturan.fillOpacity = 0.04;
+    pengaturan.dashArray = "6, 4";
+  }
+
+  if (jenis === "desa") {
+    pengaturan.weight = 1;
+    pengaturan.fillOpacity = 0.02;
+    pengaturan.dashArray = "3, 3";
+  }
+
+  if (jenis === "jalan") {
+    pengaturan.weight = 2;
+    pengaturan.opacity = 0.9;
+  }
+
+  if (jenis === "pantai") {
+    pengaturan.weight = 2.5;
+    pengaturan.dashArray = "5, 4";
+    pengaturan.fillOpacity = 0;
+  }
+
+  if (jenis === "permukiman") {
+    pengaturan.weight = 1;
+    pengaturan.fillOpacity = 0.45;
+  }
+
+  if (jenis === "bangunan") {
+    pengaturan.weight = 1;
+    pengaturan.fillOpacity = 0.55;
+  }
+
+  if (jenis === "pemerintahan") {
+    pengaturan.weight = 2;
+    pengaturan.fillOpacity = 0.4;
+  }
+
+  return pengaturan;
+}
+
+
+// 11. FUNGSI MEMBUAT GEOJSON LAYER
+function buatGeoJSON(data, jenis) {
+  return L.geoJSON(data, {
+    pane: konfigurasiData[jenis].pane,
+
+    style: function () {
+      return styleGeoJSON(jenis);
+    },
+
+    pointToLayer: function (feature, latlng) {
+      return L.circleMarker(latlng, {
+        radius: jenis === "pemerintahan" ? 6 : 4,
+        color: "#ffffff",
+        weight: 1.5,
+        fillColor: warnaLayer[jenis],
+        fillOpacity: 0.95,
+        pane: konfigurasiData[jenis].pane
+      });
+    },
+
+    onEachFeature: function (feature, layer) {
+      const properties = feature.properties || {};
+      const nama = ambilNama(properties);
+
+      layer.bindPopup(`
+        <strong>${nama}</strong>
+        <br>
+        ${konfigurasiData[jenis].nama}
+        <br><br>
+        Klik objek untuk melihat detail.
+      `);
+
+      layer.on("click", function () {
+        tampilkanDetail(
+          properties,
+          layer,
+          konfigurasiData[jenis].nama
+        );
+      });
+
+      layer.on("mouseover", function () {
+        if (layer.setStyle) {
+          layer.setStyle({
+            weight: 3,
+            color: "#ffffff",
+            fillOpacity: 0.3
+          });
+        }
+      });
+
+      layer.on("mouseout", function () {
+        if (layer.setStyle) {
+          layer.setStyle(styleGeoJSON(jenis));
+        }
+      });
+    }
+  });
+}
+
+
+// 12. FUNGSI MEMBACA FILE GEOJSON DENGAN ALTERNATIF NAMA
+async function bacaGeoJSON(daftarFile) {
+  let errorTerakhir = null;
+
+  for (const namaFile of daftarFile) {
+    try {
+      const response = await fetch(
+        "./" + encodeURIComponent(namaFile),
+        { cache: "no-cache" }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `${namaFile}: HTTP ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+
+      if (
+        !data ||
+        !["FeatureCollection", "Feature", "GeometryCollection"].includes(data.type)
+      ) {
+        throw new Error(`${namaFile}: format GeoJSON tidak valid.`);
+      }
+
+      return {
+        data: data,
+        file: namaFile
+      };
+
+    } catch (error) {
+      errorTerakhir = error;
+      console.warn("Gagal membaca:", namaFile, error.message);
+    }
+  }
+
+  throw errorTerakhir || new Error("File tidak ditemukan.");
+}
+
+
+// 13. STATUS PEMUATAN DATA
+function tampilkanStatus(jenis, status, pesan) {
+  const elemen = document.getElementById(`status-${jenis}`);
+
+  if (!elemen) return;
+
+  elemen.className = "status-row " + status;
+  elemen.textContent = pesan;
+}
+
+
+// 14. MEMUAT SETIAP LAYER
+async function muatLayer(jenis) {
+  const konfigurasi = konfigurasiData[jenis];
+
+  tampilkanStatus(
+    jenis,
+    "status-loading",
+    `${konfigurasi.nama}: sedang dimuat...`
+  );
+
+  try {
+    const hasilBaca = await bacaGeoJSON(konfigurasi.files);
+
+    const layer = buatGeoJSON(hasilBaca.data, jenis);
+
+    layerData[jenis] = layer;
+
+    const checkbox = document.querySelector(
+      `input[data-layer="${jenis}"]`
+    );
+
+    if (checkbox && checkbox.checked) {
+      layer.addTo(map);
+    }
+
+    const jumlahFitur = layer.getLayers().length;
+
+    tampilkanStatus(
+      jenis,
+      "status-success",
+      `✓ ${konfigurasi.nama}: ${jumlahFitur.toLocaleString("id-ID")} objek`
+    );
+
+    console.log(
+      `Berhasil memuat ${konfigurasi.nama}`,
+      hasilBaca.file,
+      hasilBaca.data
+    );
+
+    return true;
+
+  } catch (error) {
+    tampilkanStatus(
+      jenis,
+      "status-error",
+      `✕ ${konfigurasi.nama}: ${error.message}`
+    );
+
+    console.error(
+      `Gagal memuat ${konfigurasi.nama}:`,
+      error
+    );
+
+    return false;
+  }
+}
+
+
+// 15. MEMUAT SEMUA DATA SPASIAL
+async function muatSemuaData() {
+  statusData.innerHTML = "";
+
+  for (const jenis of Object.keys(konfigurasiData)) {
+    const baris = document.createElement("div");
+
+    baris.id = `status-${jenis}`;
+    baris.className = "status-row status-loading";
+    baris.textContent = `${konfigurasiData[jenis].nama}: menunggu...`;
+
+    statusData.appendChild(baris);
+  }
+
+  const hasil = await Promise.all(
+    Object.keys(konfigurasiData).map(jenis => muatLayer(jenis))
+  );
+
+  const berhasil = hasil.filter(Boolean).length;
+
+  const ringkasan = document.createElement("div");
+  ringkasan.style.marginTop = "10px";
+  ringkasan.style.fontWeight = "bold";
+  ringkasan.textContent =
+    `${berhasil} dari ${hasil.length} layer berhasil dimuat.`;
+
+  statusData.appendChild(ringkasan);
+
+  // Atur tampilan peta berdasarkan batas kabupaten
+  if (
+    layerData.kabupaten &&
+    layerData.kabupaten.getBounds().isValid()
+  ) {
+    map.fitBounds(
+      layerData.kabupaten.getBounds(),
+      {
+        padding: [20, 20],
+        maxZoom: 11
+      }
+    );
+  } else {
+    // Jika batas kabupaten gagal dimuat, gunakan batas
+    // layer lain yang berhasil dibaca.
+    const boundsGabungan = L.latLngBounds([]);
+
+    Object.values(layerData).forEach(layer => {
+      if (layer && layer.getBounds().isValid()) {
+        boundsGabungan.extend(layer.getBounds());
+      }
+    });
+
+    if (boundsGabungan.isValid()) {
+      map.fitBounds(boundsGabungan, {
+        padding: [20, 20],
+        maxZoom: 11
+      });
+    }
+  }
+
+  console.log(
+    `Pemuatan selesai: ${berhasil}/${hasil.length} layer berhasil.`
+  );
+}
+
+
+// 16. FILTER CHECKBOX LAYER
+document.querySelectorAll("input[data-layer]").forEach(checkbox => {
+  checkbox.addEventListener("change", function () {
+    const jenis = this.dataset.layer;
+
+    if (jenis === "pariwisata") {
+      if (this.checked) {
+        tampilkanWisata();
+      } else {
+        map.removeLayer(layerPariwisata);
+      }
+
+      return;
+    }
+
+    const layer = layerData[jenis];
+
+    if (!layer) {
+      if (this.checked) {
+        tampilkanStatus(
+          jenis,
+          "status-error",
+          "✕ Data belum berhasil dimuat."
+        );
+      }
+      return;
+    }
 
     if (this.checked) {
       layer.addTo(map);
     } else {
       map.removeLayer(layer);
     }
-
   });
+});
 
-  daftar.appendChild(label);
 
-}
-
-
-// =====================================================
-// 11. LEGENDA DATA GEOJSON
-// =====================================================
-
-function tambahLegendaGeoJSON(nama, warna) {
-
-  const container = document.getElementById(
-    "isi-legenda-otomatis"
-  );
-
-  if (!container) {
-
-    const legendaPeta = document.querySelector(
-      ".legenda-peta"
-    );
-
-    if (!legendaPeta) return;
-
-    const pemisah = document.createElement("hr");
-
-    const judul = document.createElement("b");
-
-    judul.textContent = "DATA GEOJSON";
-
-    const isi = document.createElement("div");
-
-    isi.id = "isi-legenda-otomatis";
-
-    legendaPeta.appendChild(pemisah);
-    legendaPeta.appendChild(judul);
-    legendaPeta.appendChild(isi);
-
-    tambahItemLegenda(isi, nama, warna);
-
-    return;
-
-  }
-
-  tambahItemLegenda(container, nama, warna);
-
-}
-
-
-function tambahItemLegenda(container, nama, warna) {
-
-  const item = document.createElement("div");
-
-  item.className = "legend-item";
-
-  item.innerHTML = `
-    <span style="
-      width:18px;
-      height:13px;
-      display:inline-block;
-      background:${warna};
-      border:1px solid #555;
-      border-radius:3px;
-      flex-shrink:0;
-    "></span>
-    <span>${escapeHTML(nama)}</span>
-  `;
-
-  container.appendChild(item);
-
-}
-
-
-// =====================================================
-// 12. MEMBACA SATU FILE GEOJSON
-// =====================================================
-
-async function muatSatuGeoJSON(file) {
-
-  const nama = namaLayerDariFile(file.path);
-
-  const namaFile = namaDasar(file.path);
-
-  const warna =
-    warnaLayer[indeksWarna % warnaLayer.length];
-
-  indeksWarna++;
-
-  try {
-
-    const url = GITHUB_RAW +
-      file.path.split("/")
-        .map(encodeURIComponent)
-        .join("/");
-
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (
-      !data ||
-      ![
-        "FeatureCollection",
-        "Feature",
-        "GeometryCollection"
-      ].includes(data.type)
-    ) {
-      throw new Error("Format GeoJSON tidak valid");
-    }
-
-    const layer = L.geoJSON(data, {
-
-      style: function() {
-        return buatStyle(warna);
-      },
-
-      pointToLayer: function(feature, latlng) {
-        return buatMarker(latlng, warna);
-      },
-
-      onEachFeature: tampilkanInformasi
-
-    });
-
-    if (layer.getLayers().length === 0) {
-      throw new Error("Tidak terdapat fitur spasial");
-    }
-
-    // Menyimpan layer
-
-    semuaLayer[namaFile] = layer;
-
-    semuaFile.push({
-      nama: nama,
-      file: file.path,
-      warna: warna,
-      jumlah: layer.getLayers().length
-    });
-
-    // Menampilkan layer di peta
-
-    layer.addTo(map);
-
-    // Mengaktifkan checkbox HTML yang sudah ada
-
-    const termasukCheckboxLama =
-      Object.values(hubunganCheckbox)
-        .some(daftar => daftar.includes(namaFile));
-
-    if (termasukCheckboxLama) {
-
-      aturCheckboxLama(namaFile, layer);
-
-    } else {
-
-      buatCheckboxOtomatis(
-        nama,
-        file.path,
-        layer,
-        warna
-      );
-
-    }
-
-    // Menambahkan legenda
-
-    tambahLegendaGeoJSON(nama, warna);
-
-    console.log(
-      `BERHASIL: ${file.path} | ${layer.getLayers().length} fitur`
-    );
-
-    return layer;
-
-  } catch (error) {
-
-    console.error(
-      `GAGAL: ${file.path}`,
-      error
-    );
-
-    return null;
-
-  }
-
-}
-
-
-// =====================================================
-// 13. MEMBACA SELURUH REPOSITORY GITHUB
-// =====================================================
-
-async function bacaSemuaGeoJSON() {
-
-  console.log("Memulai pembacaan seluruh data...");
-
-  const container = buatFilterTambahan();
-
-  const daftar = container.querySelector(
-    "#daftar-geojson"
-  );
-
-  daftar.innerHTML = `
-    <p style="font-size:12px;color:#687782">
-      Membaca data dari GitHub...
-    </p>
-  `;
-
-  try {
-
-    const response = await fetch(GITHUB_API);
-
-    if (!response.ok) {
-      throw new Error(
-        `GitHub API gagal: HTTP ${response.status}`
-      );
-    }
-
-    const repository = await response.json();
-
-    if (repository.truncated) {
-      throw new Error(
-        "Daftar file repository terpotong oleh GitHub API."
-      );
-    }
-
-    // Mencari semua file GeoJSON di seluruh folder
-
-    const daftarFile = repository.tree.filter(file =>
-
-      file.type === "blob" &&
-      /\.(geojson|geojsons)$/i.test(file.path)
-
-    );
-
-    console.log(
-      "Jumlah file GeoJSON ditemukan:",
-      daftarFile.length
-    );
-
-    if (daftarFile.length === 0) {
-
-      daftar.innerHTML = `
-        <p style="color:red;font-size:12px">
-          Tidak ditemukan file GeoJSON.
-        </p>
-      `;
-
-      return;
-
-    }
-
-    daftar.innerHTML = "";
-
-    // Membaca seluruh file
-
-    for (const file of daftarFile) {
-
-      await muatSatuGeoJSON(file);
-
-    }
-
-    // Menghitung seluruh batas data
-
-    const boundsGabungan = L.latLngBounds([]);
-
-    let adaBounds = false;
-
-    Object.values(semuaLayer).forEach(layer => {
-
-      const bounds = layer.getBounds();
-
-      if (bounds.isValid()) {
-
-        boundsGabungan.extend(bounds);
-
-        adaBounds = true;
-
-      }
-
-    });
-
-    if (adaBounds) {
-
-      map.fitBounds(boundsGabungan, {
-        padding: [30, 30],
-        maxZoom: 12
-      });
-
-    }
-
-    // Informasi jumlah data
-
-    const informasi = document.createElement("p");
-
-    informasi.style.cssText = `
-      font-size:11px;
-      color:#687782;
-      margin-top:12px;
-      border-top:1px solid #ddd;
-      padding-top:8px;
-    `;
-
-    informasi.textContent =
-      `${semuaFile.length} file berhasil dimuat dari ${daftarFile.length} file GeoJSON.`;
-
-    daftar.appendChild(informasi);
-
-    console.log("====================================");
-    console.log("PEMBACAAN DATA SELESAI");
-    console.log("File ditemukan:", daftarFile.length);
-    console.log("File berhasil:", semuaFile.length);
-    console.log("File gagal:", daftarFile.length - semuaFile.length);
-    console.log("====================================");
-
-  } catch (error) {
-
-    console.error("KESALAHAN REPOSITORY:", error);
-
-    daftar.innerHTML = `
-      <p style="color:red;font-size:12px">
-        Gagal membaca repository: ${escapeHTML(error.message)}
-      </p>
-    `;
-
-  }
-
-}
-
-
-// =====================================================
-// 14. DATA PARIWISATA
-// =====================================================
-
-function buatIkon(jenis, warna) {
-
-  const ikon = {
-
-    pemerintahan: "fa-landmark",
-    bangunan: "fa-building",
-    permukiman: "fa-house",
-    pantai: "fa-umbrella-beach",
-    bahari: "fa-water",
-    alam: "fa-mountain-sun",
-    budaya: "fa-house-flag",
-    sejarah: "fa-monument"
-
-  };
-
-  const namaIkon =
-    ikon[jenis] || "fa-location-dot";
-
-  return L.divIcon({
-
-    className: "ikon-peta",
-
-    html: `
-      <div class="marker-custom" style="--warna:${warna}">
-        <i class="fa-solid ${namaIkon}"></i>
-      </div>
-    `,
-
-    iconSize: [36, 42],
-    iconAnchor: [18, 38],
-    popupAnchor: [0, -38]
-
-  });
-
-}
-
-
+// 17. DATA PARIWISATA WAKATOBI
 const dataWisata = [
-
   {
     nama: "Sombu Dive",
+    kategori: "wisata-bahari",
     lat: -5.295736,
-    lon: 123.544769,
-    jenis: "Wisata Bahari",
-    ikon: "bahari",
-    warna: "#00bcd4"
+    lng: 123.544769,
+    ikon: "fa-water",
+    warna: "#00a8cc"
   },
-
   {
     nama: "Goa Air Kontamale",
+    kategori: "wisata-alam",
     lat: -5.3100,
-    lon: 123.5700,
-    jenis: "Wisata Alam",
-    ikon: "alam",
-    warna: "#43a047"
+    lng: 123.5700,
+    ikon: "fa-mountain",
+    warna: "#27ae60"
   },
-
   {
     nama: "Puncak Toliamba",
+    kategori: "wisata-alam",
     lat: -5.295736,
-    lon: 123.544769,
-    jenis: "Wisata Alam",
-    ikon: "alam",
-    warna: "#ff9800"
+    lng: 123.544769,
+    ikon: "fa-mountain-sun",
+    warna: "#27ae60"
   },
-
   {
     nama: "Pantai Cemara",
+    kategori: "wisata-pantai",
     lat: -5.255556,
-    lon: 123.527083,
-    jenis: "Wisata Pantai",
-    ikon: "pantai",
-    warna: "#0288d1"
+    lng: 123.527083,
+    ikon: "fa-umbrella-beach",
+    warna: "#f39c12"
   },
-
   {
     nama: "Pantai Waha",
+    kategori: "wisata-pantai",
     lat: -5.263210,
-    lon: 123.548120,
-    jenis: "Wisata Pantai",
-    ikon: "pantai",
-    warna: "#00acc1"
+    lng: 123.548120,
+    ikon: "fa-umbrella-beach",
+    warna: "#f39c12"
   },
-
   {
     nama: "Pantai Moli Sahatu",
+    kategori: "wisata-pantai",
     lat: -5.2500,
-    lon: 123.5700,
-    jenis: "Wisata Pantai",
-    ikon: "pantai",
-    warna: "#0097a7"
+    lng: 123.5700,
+    ikon: "fa-umbrella-beach",
+    warna: "#f39c12"
   },
-
   {
     nama: "Desa Wisata Liya Togo",
+    kategori: "wisata-budaya",
     lat: -5.373700,
-    lon: 123.623200,
-    jenis: "Wisata Budaya",
-    ikon: "budaya",
-    warna: "#8e24aa"
+    lng: 123.623200,
+    ikon: "fa-house",
+    warna: "#e84393"
   },
-
   {
     nama: "Kampung Bajo Mola",
+    kategori: "wisata-budaya",
     lat: -5.344500,
-    lon: 123.539200,
-    jenis: "Wisata Budaya",
-    ikon: "budaya",
-    warna: "#d81b60"
+    lng: 123.539200,
+    ikon: "fa-house",
+    warna: "#e84393"
   },
-
   {
     nama: "Pantai Sousu",
+    kategori: "wisata-pantai",
     lat: -5.286400,
-    lon: 123.638400,
-    jenis: "Wisata Pantai",
-    ikon: "pantai",
-    warna: "#039be5"
+    lng: 123.638400,
+    ikon: "fa-umbrella-beach",
+    warna: "#f39c12"
   },
-
   {
     nama: "Benteng Tindoi",
+    kategori: "wisata-sejarah",
     lat: -5.2800,
-    lon: 123.5900,
-    jenis: "Wisata Sejarah",
-    ikon: "sejarah",
-    warna: "#795548"
+    lng: 123.5900,
+    ikon: "fa-landmark",
+    warna: "#8e44ad"
   }
-
 ];
 
 
-// =====================================================
-// 15. MENAMPILKAN PARIWISATA
-// =====================================================
+// 18. LAYER PARIWISATA
+const layerPariwisata = L.layerGroup([], {
+  pane: "paneWisata"
+});
 
-const layerPariwisata = L.layerGroup().addTo(map);
+let kategoriAktif = "semua";
 
-const markerWisata = [];
+function buatIkonWisata(item) {
+  return L.divIcon({
+    className: "",
+    html: `
+      <div class="custom-marker" style="background:${item.warna}">
+        <i class="fa-solid ${item.ikon}"></i>
+      </div>
+    `,
+    iconSize: [30, 36],
+    iconAnchor: [15, 34],
+    popupAnchor: [0, -32]
+  });
+}
 
-dataWisata.forEach(item => {
 
+function buatMarkerWisata(item) {
   const marker = L.marker(
-    [item.lat, item.lon],
+    [item.lat, item.lng],
     {
-      icon: buatIkon(item.ikon, item.warna)
+      icon: buatIkonWisata(item),
+      pane: "paneWisata"
     }
   );
 
-  const isi = `
-    <h3>${escapeHTML(item.nama)}</h3>
-    <p><b>Jenis:</b> ${escapeHTML(item.jenis)}</p>
-    <p><b>Koordinat:</b> ${item.lat}, ${item.lon}</p>
-  `;
+  marker.bindPopup(`
+    <strong>${item.nama}</strong>
+    <br>
+    Kategori: ${item.kategori.replace("wisata-", "Wisata ")}
+    <br>
+    Latitude: ${item.lat}
+    <br>
+    Longitude: ${item.lng}
+  `);
 
-  marker.bindPopup(isi);
-
-  marker.on("click", function() {
-
-    const hasil = document.getElementById("hasil");
-
-    if (hasil) {
-      hasil.innerHTML = isi;
-    }
-
+  marker.on("click", function () {
+    hasilDetail.innerHTML = `
+      <div class="detail-title">${item.nama}</div>
+      <div class="detail-row">
+        <strong>Kategori:</strong>
+        ${item.kategori.replace("wisata-", "Wisata ")}
+      </div>
+      <div class="detail-row">
+        <strong>Latitude:</strong> ${item.lat}
+      </div>
+      <div class="detail-row">
+        <strong>Longitude:</strong> ${item.lng}
+      </div>
+    `;
   });
 
-  const kategori =
-    item.jenis.toLowerCase().replaceAll(" ", "-");
-
-  marker.options.kategoriFilter = kategori;
-
-  markerWisata.push({
-    marker,
-    kategori
-  });
-
-  layerPariwisata.addLayer(marker);
-
-});
+  return marker;
+}
 
 
-// =====================================================
-// 16. FILTER KATEGORI PARIWISATA
-// =====================================================
+function tampilkanWisata() {
+  layerPariwisata.clearLayers();
 
-const semuaKategori = [
-  "wisata-bahari",
-  "wisata-pantai",
-  "wisata-alam",
-  "wisata-budaya",
-  "wisata-sejarah"
-];
-
-const filterAktif = new Set(semuaKategori);
-
-
-function terapkanFilterWisata() {
-
-  markerWisata.forEach(({marker, kategori}) => {
-
-    const tampil =
-      filterAktif.has(kategori);
-
-    if (tampil && !layerPariwisata.hasLayer(marker)) {
-
-      layerPariwisata.addLayer(marker);
-
-    }
-
-    if (!tampil && layerPariwisata.hasLayer(marker)) {
-
-      layerPariwisata.removeLayer(marker);
-
-    }
-
-  });
-
-  document.querySelectorAll(
-    ".chip[data-category]"
-  ).forEach(tombol => {
-
-    const kategori = tombol.dataset.category;
-
-    tombol.classList.toggle(
-      "active",
-      kategori === "semua"
-        ? filterAktif.size === semuaKategori.length
-        : filterAktif.has(kategori)
+  const dataTerpilih = dataWisata.filter(item => {
+    return (
+      kategoriAktif === "semua" ||
+      item.kategori === kategoriAktif
     );
-
   });
 
+  dataTerpilih.forEach(item => {
+    layerPariwisata.addLayer(
+      buatMarkerWisata(item)
+    );
+  });
+
+  const checkbox = document.querySelector(
+    'input[data-layer="pariwisata"]'
+  );
+
+  if (checkbox && checkbox.checked) {
+    layerPariwisata.addTo(map);
+  } else {
+    map.removeLayer(layerPariwisata);
+  }
 }
 
 
-document.querySelectorAll(
-  ".chip[data-category]"
-).forEach(tombol => {
+// 19. FILTER KATEGORI WISATA
+document.querySelectorAll(".chip").forEach(button => {
+  button.addEventListener("click", function () {
+    document.querySelectorAll(".chip").forEach(chip => {
+      chip.classList.remove("active");
+    });
 
-  tombol.addEventListener("click", () => {
+    this.classList.add("active");
 
-    const kategori = tombol.dataset.category;
+    kategoriAktif = this.dataset.category;
 
-    if (kategori === "semua") {
-
-      filterAktif.clear();
-
-      semuaKategori.forEach(item => {
-        filterAktif.add(item);
-      });
-
-    } else if (filterAktif.has(kategori)) {
-
-      filterAktif.delete(kategori);
-
-    } else {
-
-      filterAktif.add(kategori);
-
-    }
-
-    terapkanFilterWisata();
-
+    tampilkanWisata();
   });
-
 });
 
 
-// =====================================================
-// 17. FILTER TAMPILAN PARIWISATA
-// =====================================================
-
-const checkboxWisata = document.querySelector(
-  'input[data-layer="pariwisata"]'
-);
-
-if (checkboxWisata) {
-
-  checkboxWisata.addEventListener("change", function() {
-
-    if (this.checked) {
-      layerPariwisata.addTo(map);
-    } else {
-      map.removeLayer(layerPariwisata);
-    }
-
-  });
-
-}
+// 20. INISIALISASI WISATA DAN DATA SPASIAL
+tampilkanWisata();
+muatSemuaData();
 
 
-// =====================================================
-// 18. MEMULAI WEBGIS
-// =====================================================
+// 21. SKALA PETA
+L.control.scale({
+  imperial: false,
+  metric: true
+}).addTo(map);
 
-async function mulaiPeta() {
 
-  // Mempertahankan tampilan wisata
-
-  layerPariwisata.addTo(map);
-
-  // Memuat seluruh GeoJSON dari GitHub
-
-  await bacaSemuaGeoJSON();
-
-  // Memperbarui ukuran peta
-
-  map.invalidateSize();
-
-  console.log("WebGIS Kabupaten Wakatobi siap.");
-
-}
-
-mulaiPeta();
+// 22. INFORMASI AWAL
+console.log("WebGIS Kabupaten Wakatobi berhasil dijalankan.");
+console.log("Sumber GeoJSON: root repository GitHub Pages.");
