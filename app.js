@@ -29,30 +29,26 @@ const ISLAND_BOUNDS = {
 const ALL_BOUNDS = [[-6.2,123.3],[-5.15,124.7]];
 let points = [], markerRefs = [], roadFeatures = [], currentCategory = 'ALL';
 
-// Bounds kecamatan dibaca langsung dari SHP administrasi kecamatan.
+// Zoom ke kecamatan: bounds diambil dari SHP administrasi kecamatan.
 const kecamatanBounds = {};
 const zoomKecamatanEl = document.getElementById('zoomKecamatan');
 if (zoomKecamatanEl) zoomKecamatanEl.innerHTML = '<option value="">Seluruh Wakatobi</option>';
-
 function getKecamatanName(p) {
   return firstProp(p, ['NAMOBJ','WADMKC','NAMKEC','NAMAKEC','NAMA_KEC','KECAMATAN','NAMKECAM','NAME_2','NAME','name']);
 }
-
 function addKecamatanBounds(name, bounds) {
   if (!name || !bounds || !bounds.isValid()) return;
   if (kecamatanBounds[name]) kecamatanBounds[name].extend(bounds);
   else kecamatanBounds[name] = bounds;
-
   if (zoomKecamatanEl && !Array.from(zoomKecamatanEl.options).some(o => o.value === name)) {
     zoomKecamatanEl.add(new Option(name, name));
   }
 }
-
 if (zoomKecamatanEl) zoomKecamatanEl.addEventListener('change', e => {
   const name = e.target.value;
   if (!name) { map.fitBounds(ALL_BOUNDS); return; }
-  const b = kecamatanBounds[name];
-  if (b && b.isValid()) map.flyToBounds(b, {padding:[30,30], maxZoom:14, duration:1.2});
+  const bounds = kecamatanBounds[name];
+  if (bounds && bounds.isValid()) map.flyToBounds(bounds, {padding:[30,30], maxZoom:14, duration:1.2});
 });
 
 function esc(v) {
@@ -77,8 +73,8 @@ function classifyText(text) {
   if (/sekolah|sdn?|smpn?|sman?|smk|madrasah|mts|mi\b|paud|tk\b|universitas|politeknik|pesantren|pendidikan/.test(t)) return 'Pendidikan';
   if (/puskesmas|pustu|rumah sakit|rsud|klinik|dokter|posyandu|polindes|poskesdes|apotek|kesehatan/.test(t)) return 'Kesehatan';
   if (/kantor|camat|bupati|dprd|kelurahan|kecamatan|polres|polsek|koramil|kodim|pemerintah|balai desa|instansi/.test(t)) return 'Pemerintahan';
-  if (/pantai|wisata|objek wisata|destinasi|benteng|gua|goa|diving|selam|resort|keraton|museum|taman wisata|air terjun|tourism/.test(t)) return 'Pariwisata';
-  if (/permukiman|pemukiman|perumahan|kampung|dusun|permukiman|village|residential/.test(t)) return 'Permukiman';
+  if /pantai|wisata|objek wisata|destinasi|benteng|gua|goa|diving|selam|resort|keraton|museum|taman wisata|air terjun|tourism/.test(t)) return 'Pariwisata';
+  if /permukiman|pemukiman|perumahan|kampung|dusun|permukiman|village|residential/.test(t)) return 'Permukiman';
   return null;
 }
 function markerIcon(category) {
@@ -158,7 +154,7 @@ function addRoads(fc, layerName) {
       roadFeatures.push({layer,kind});
       layer.on('click',()=>detail(firstProp(p,['NAMOBJ','NAMA','nama'])||kind,kind,[
         ['Panjang',km.toFixed(3)+' km'],['Layer',layerName],
-        ...Object.entries(p).slice(0,12).map(([k,v])=>[k,v])
+        ...Object.entries(p).slice(0,12).map(([k,v])=>[k,v]
       ]));
       const nm=firstProp(p,['NAMOBJ','NAMA','nama']);
       if(nm) layer.bindTooltip(esc(nm),{sticky:true});
@@ -189,14 +185,12 @@ function validWgs84(fc) {
   return Number.isFinite(c[0]) && Number.isFinite(c[1]) && Math.abs(c[0])<=180 && Math.abs(c[1])<=90;
 }
 function layerNameOf(name) { return norm(name).replace(/\.shp$/,'').replace(/^.*\//,'').replace(/[_-]+/g,''); }
-
 function handleSHP(name, value) {
   const fc=featureCollection(value);
   if(!fc || !fc.features.length) { log(`SHP ${name}: tidak berisi fitur GeoJSON.`); return; }
   if(!validWgs84(fc)) { log(`SHP ${name}: koordinat bukan longitude/latitude. Pastikan file .prj ikut di dalam ZIP.`); return; }
   const n=layerNameOf(name);
   log(`SHP ${name}: ${fc.features.length} fitur`);
-
   if(n.includes('jalan') || n.includes('jaringanjalan')) {
     const result=addRoads(fc,name); showRoadStats(result.stats,result.total); return;
   }
@@ -205,19 +199,18 @@ function handleSHP(name, value) {
   const isAdmin=n.includes('administrasi') || n.includes('kecamatan') || n.includes('desa');
   const isSettlement=n.includes('permukiman') || n.includes('pemukiman');
 
-  // Simpan bounds setiap fitur pada layer kecamatan agar dropdown zoom dapat digunakan.
-  const isKecamatanLayer=n.includes('administrasikecamatan') || n.includes('administrasikec') || n.includes('kecamatan');
-  if(isKecamatanLayer) {
+  // Tambahan dropdown zoom kecamatan; tidak mengubah proses layer yang sudah ada.
+  const isKecamatanLayer = n.includes('administrasikecamatan') || n.includes('administrasikec') || n.includes('kecamatan');
+  if (isKecamatanLayer) {
     fc.features.forEach(f => {
-      if(!f.geometry) return;
-      const nama=getKecamatanName(f.properties||{});
-      if(!nama) { console.warn('Nama kecamatan tidak terbaca dari atribut SHP:', f.properties); return; }
+      if (!f.geometry) return;
+      const nama = getKecamatanName(f.properties || {});
+      if (!nama) return;
       try { addKecamatanBounds(String(nama).trim(), L.geoJSON(f).getBounds()); }
-      catch(err) { console.warn('Bounds kecamatan gagal:', nama, err); }
+      catch (err) { console.warn('Bounds kecamatan gagal:', nama, err); }
     });
     log(`${Object.keys(kecamatanBounds).length} kecamatan terbaca untuk dropdown zoom.`);
   }
-
   if(isAdmin || isSettlement) {
     L.geoJSON(fc,{style:()=>({
       color:isAdmin?'#ffffff':'#f1c40f', weight:isAdmin?1.4:1.2,
@@ -302,7 +295,7 @@ async function loadSHPFolder() {
     }
   }
   log(`SHP selesai: ${loaded} layer berhasil, ${failed} layer gagal/tidak ditemukan.`);
-  if (!loaded) throw new Error('Tidak ada SHP yang berhasil dibaca. Periksa nama layer dan folder KAB. WAKATOBI.');
+  if (!loaded) throw new Error('Tidak ada SHP yang berhasil dibaca. Periksa nama layer dan struktur folder KAB. WAKATOBI.');
   return loaded;
 }
 
@@ -316,7 +309,6 @@ const OVERPASS_QUERY=`[out:json][timeout:60];(
  nwr["natural"~"^(beach|cave_entrance)$"](-6.2,123.3,-5.15,124.7);
  nwr["sport"="scuba_diving"](-6.2,123.3,-5.15,124.7);
 );out center tags;`;
-
 async function loadOSM() {
   const mirrors=['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter'];
   for(const url of mirrors) {
