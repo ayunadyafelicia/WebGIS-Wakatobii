@@ -1,10 +1,6 @@
+* { box-sizing: border-box; }
 
-* {
-  box-sizing: border-box;
-}
-
-html,
-body {
+html, body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -25,16 +21,9 @@ header {
   font-size: 19px;
   font-weight: bold;
 }
+header i { font-size: 20px; }
 
-header i {
-  font-size: 20px;
-}
-
-main {
-  display: flex;
-  width: 100%;
-  height: calc(100vh - 58px);
-}
+main { display: flex; width: 100%; height: calc(100vh - 58px); }
 
 #panel {
   width: 338px;
@@ -45,57 +34,28 @@ main {
   background: #fff;
   z-index: 500;
 }
+#panel section { padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid #e1e1e1; }
+#panel section:last-child { border-bottom: none; }
+#panel h3 { margin: 0 0 12px; font-size: 14px; color: #111; }
+#panel h3 i { margin-right: 3px; }
+#panel h4 { margin: 0 0 9px; font-size: 12px; color: #16445a; }
 
-#panel section {
-  padding-bottom: 12px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid #e1e1e1;
-}
+.filter-check { display: flex; align-items: center; gap: 9px; margin: 8px 0; font-size: 12px; cursor: pointer; }
+.filter-check input { width: 14px; height: 14px; margin: 0; accent-color: #16445a; cursor: pointer; }
 
-#panel section:last-child {
-  border-bottom: none;
-}
-
-#panel h3 {
-  margin: 0 0 12px;
-  font-size: 14px;
-  color: #111;
-}
-
-#panel h3 i {
-  margin-right: 3px;
-}
-
-#panel h4 {
-  margin: 0 0 9px;
-  font-size: 12px;
+/* PILIH KECAMATAN */
+#pilih-kecamatan {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #c9d3d9;
+  border-radius: 6px;
+  background: #fff;
   color: #16445a;
-}
-
-.filter-check {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin: 8px 0;
   font-size: 12px;
   cursor: pointer;
 }
 
-.filter-check input {
-  width: 14px;
-  height: 14px;
-  margin: 0;
-  accent-color: #16445a;
-  cursor: pointer;
-}
-
-.chip-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 12px;
-}
-
+.chip-container { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
 .chip {
   border: none;
   border-radius: 5px;
@@ -106,11 +66,7 @@ main {
   cursor: pointer;
   transition: 0.2s;
 }
-
-.chip:hover,
-.chip.active {
-  background: #287b9d;
-}
+.chip:hover, .chip.active { background: #287b9d; }
 
 /* LEGENDA PETA */
 .map-legend {
@@ -127,74 +83,19 @@ main {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
   font-size: 12px;
 }
+.map-legend h3 { margin: 0 0 12px; font-size: 14px; color: #123d52; }
+.map-legend h3 i { margin-right: 4px; }
+.legend-item { display: flex; align-items: center; gap: 10px; min-height: 25px; margin: 9px 0; font-size: 12px; }
 
-.map-legend h3 {
-  margin: 0 0 12px;
-  font-size: 14px;
-  color: #123d52;
-}
+.legend-area { display: inline-block; flex: 0 0 22px; width: 22px; height: 14px; border: 2px solid; border-radius: 2px; }
+.legend-area.kab  { border-color: #f4e342; background: rgba(244, 227, 66, 0.18); }
+.legend-area.kec  { border-color: #ff8c42; border-style: dashed; background: rgba(255, 140, 66, 0.12); }
+.legend-area.desa { border-color: #eeeeee; border-style: dotted; background: rgba(255, 255, 255, 0.08); }
 
-.map-legend h3 i {
-  margin-right: 4px;
-}
+.legend-line { display: inline-block; flex: 0 0 24px; width: 24px; height: 0; border-top: 3px solid; }
+.legend-line.jalan  { border-color: #ff3b30; }
+.legend-line.pantai { border-color: #00e5ff; border-top-style: dashed; }
 
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 25px;
-  margin: 9px 0;
-  font-size: 12px;
-}
-
-/* SIMBOL AREA BATAS ADMINISTRASI */
-.legend-area {
-  display: inline-block;
-  flex: 0 0 22px;
-  width: 22px;
-  height: 14px;
-  border: 2px solid;
-  border-radius: 2px;
-  transform: none;
-}
-
-.legend-area.kab {
-  border-color: #f4e342;
-  background: rgba(244, 227, 66, 0.18);
-}
-
-.legend-area.kec {
-  border-color: #ff8c42;
-  border-style: dashed;
-  background: rgba(255, 140, 66, 0.12);
-}
-
-.legend-area.desa {
-  border-color: #eeeeee;
-  border-style: dotted;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-/* SIMBOL GARIS */
-.legend-line {
-  display: inline-block;
-  flex: 0 0 24px;
-  width: 24px;
-  height: 0;
-  border-top: 3px solid;
-  transform: none;
-}
-
-.legend-line.jalan {
-  border-color: #ff3b30;
-}
-
-.legend-line.pantai {
-  border-color: #00e5ff;
-  border-top-style: dashed;
-}
-
-/* SIMBOL TITIK LEGENDA */
 .map-legend .legend-symbol {
   display: inline-flex;
   align-items: center;
@@ -202,24 +103,11 @@ main {
   flex: 0 0 25px;
   width: 25px;
   height: 25px;
-  border: none;
-  border-radius: 0;
-  background: transparent;
   font-size: 17px;
   line-height: 1;
-  box-shadow: none;
-  transform: none !important;
-  rotate: none;
 }
+.map-legend .legend-symbol i { display: inline-block; line-height: 1; }
 
-.map-legend .legend-symbol i {
-  display: inline-block;
-  line-height: 1;
-  transform: none !important;
-  rotate: none;
-}
-
-/* PERMUKIMAN: SIMBOL AREA UNGU */
 .map-legend .legend-symbol.permukiman {
   flex: 0 0 22px;
   width: 22px;
@@ -230,26 +118,10 @@ main {
   color: transparent;
   font-size: 0;
 }
-
-/* BANGUNAN */
-.map-legend .legend-symbol.bangunan {
-  color: #e84393;
-}
-
-/* PEMERINTAHAN */
-.map-legend .legend-symbol.pemerintah {
-  color: #8e44ad;
-}
-
-/* PARIWISATA */
-.map-legend .legend-symbol.wisata {
-  color: #00a8cc;
-}
-
-/* WISATA SEJARAH */
-.map-legend .legend-symbol.wisata-sejarah {
-  color: #8b4513;
-}
+.map-legend .legend-symbol.bangunan        { color: #e84393; }
+.map-legend .legend-symbol.pemerintah      { color: #8e44ad; }
+.map-legend .legend-symbol.wisata          { color: #00a8cc; }
+.map-legend .legend-symbol.wisata-sejarah  { color: #8b4513; }
 
 /* DETAIL OBJEK */
 #hasil {
@@ -263,37 +135,13 @@ main {
   font-size: 12px;
   overflow-wrap: anywhere;
 }
-
-#hasil > i {
-  font-size: 19px;
-  margin-bottom: 8px;
-}
-
-#hasil p {
-  margin: 5px 0;
-}
-
-.detail-title {
-  font-size: 14px;
-  font-weight: bold;
-  color: #16445a;
-  margin-bottom: 9px;
-}
-
-.detail-row {
-  text-align: left;
-  margin: 6px 0;
-  line-height: 1.5;
-}
+#hasil > i { font-size: 19px; margin-bottom: 8px; }
+#hasil p { margin: 5px 0; }
+.detail-title { font-size: 14px; font-weight: bold; color: #16445a; margin-bottom: 9px; }
+.detail-row { text-align: left; margin: 6px 0; line-height: 1.5; }
 
 /* PETA */
-#map {
-  position: relative;
-  flex: 1;
-  height: 100%;
-  min-width: 0;
-  background: #dce6e9;
-}
+#map { position: relative; flex: 1; height: 100%; min-width: 0; background: #dce6e9; }
 
 .basemap-control {
   position: absolute;
@@ -306,83 +154,34 @@ main {
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
   font-size: 12px;
 }
+.basemap-control label { display: block; margin: 5px 0; cursor: pointer; }
+.basemap-control input { accent-color: #1675d1; }
 
-.basemap-control label {
-  display: block;
-  margin: 5px 0;
-  cursor: pointer;
-}
+.leaflet-popup-content { max-width: 260px; overflow-wrap: anywhere; }
 
-.basemap-control input {
-  accent-color: #1675d1;
-}
+/* MARKER BULAT SEMPURNA (tanpa rotasi) */
+.leaflet-div-icon.marker-wrap { background: transparent; border: none; }
 
-.leaflet-popup-content {
-  max-width: 260px;
-  overflow-wrap: anywhere;
-}
-
-/* MARKER PARIWISATA DI PETA */
 .custom-marker {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 30px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   color: white;
   border: 2px solid white;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
+  border-radius: 50%;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
 }
-
-.custom-marker i {
-  transform: rotate(45deg);
-  font-size: 13px;
-}
-
-/* MARKER GEOJSON */
-.geojson-custom-icon {
-  background: transparent;
-  border: none;
-}
+.custom-marker i { font-size: 14px; line-height: 1; }
 
 /* RESPONSIVE */
 @media (max-width: 700px) {
-  header {
-    height: 52px;
-    font-size: 14px;
-    padding: 0 10px;
-  }
-
-  main {
-    height: calc(100vh - 52px);
-  }
-
-  #panel {
-    width: 260px;
-    min-width: 260px;
-    padding: 12px;
-  }
-
-  .basemap-control {
-    top: 8px;
-    right: 8px;
-  }
-
-  .map-legend {
-    left: 8px;
-    bottom: 15px;
-    width: 190px;
-    padding: 10px 12px;
-    font-size: 11px;
-  }
-
-  .map-legend h3 {
-    font-size: 13px;
-  }
-
-  .legend-item {
-    font-size: 11px;
-  }
+  header { height: 52px; font-size: 14px; padding: 0 10px; }
+  main { height: calc(100vh - 52px); }
+  #panel { width: 260px; min-width: 260px; padding: 12px; }
+  .basemap-control { top: 8px; right: 8px; }
+  .map-legend { left: 8px; bottom: 15px; width: 190px; padding: 10px 12px; font-size: 11px; }
+  .map-legend h3 { font-size: 13px; }
+  .legend-item { font-size: 11px; }
 }
