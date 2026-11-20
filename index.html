@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -11,41 +12,76 @@
 </head>
 
 <body>
+
   <header>
     <i class="fa-solid fa-map-location-dot"></i>
     WebGIS Kabupaten Wakatobi (Wangi-Wangi, Kaledupa, Tomia, Binongko)
   </header>
 
   <main>
+
     <aside id="panel">
 
-      <section>
-        <h3><i class="fa-solid fa-location-crosshairs"></i> Zoom ke Kecamatan</h3>
-        <select id="pilih-kecamatan">
-          <option value="">-- Seluruh Kabupaten --</option>
-        </select>
-      </section>
-
+      <!-- FILTER OBJEK -->
       <section>
         <h3><i class="fa-solid fa-filter"></i> Filter Objek</h3>
         <h4>Batas dan Jaringan</h4>
-        <label class="filter-check"><input type="checkbox" data-layer="kabupaten" checked> Batas Kabupaten</label>
-        <label class="filter-check"><input type="checkbox" data-layer="kecamatan" checked> Batas Kecamatan</label>
-        <label class="filter-check"><input type="checkbox" data-layer="desa" checked> Batas Desa/Kelurahan</label>
-        <label class="filter-check"><input type="checkbox" data-layer="jalan" checked> Jaringan Jalan</label>
-        <label class="filter-check"><input type="checkbox" data-layer="pantai" checked> Garis Pantai</label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="kabupaten" checked>
+          Batas Kabupaten
+        </label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="kecamatan" checked>
+          Batas Kecamatan
+        </label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="desa" checked>
+          Batas Desa/Kelurahan
+        </label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="jalan" checked>
+          Jaringan Jalan
+        </label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="pantai" checked>
+          Garis Pantai
+        </label>
       </section>
 
+      <!-- PENGGUNAAN LAHAN -->
       <section>
         <h4>Penggunaan Lahan dan Fasilitas</h4>
-        <label class="filter-check"><input type="checkbox" data-layer="permukiman" checked> Permukiman</label>
-        <label class="filter-check"><input type="checkbox" data-layer="bangunan" checked> Bangunan</label>
-        <label class="filter-check"><input type="checkbox" data-layer="pemerintahan" checked> Pemerintahan</label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="permukiman">
+          Permukiman
+        </label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="bangunan">
+          Bangunan
+        </label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="pemerintahan">
+          Pemerintahan
+        </label>
       </section>
 
+      <!-- PARIWISATA -->
       <section>
         <h4>Pariwisata</h4>
-        <label class="filter-check"><input type="checkbox" data-layer="pariwisata" checked> Tampilkan Pariwisata</label>
+
+        <label class="filter-check">
+          <input type="checkbox" data-layer="pariwisata" checked>
+          Tampilkan Pariwisata
+        </label>
+
         <div class="chip-container">
           <button class="chip active" data-category="semua">Semua</button>
           <button class="chip" data-category="wisata-bahari">Wisata Bahari</button>
@@ -56,43 +92,129 @@
         </div>
       </section>
 
+      <!-- DETAIL OBJEK -->
       <section>
         <h3><i class="fa-solid fa-circle-info"></i> Detail Objek</h3>
+
         <div id="hasil">
           <i class="fa-solid fa-hand-pointer"></i>
           <p>Klik ikon, garis, atau area di peta.</p>
         </div>
       </section>
 
-      <section>
-        <h3><i class="fa-solid fa-database"></i> Status Data</h3>
-        <div id="status-data">Memuat data...</div>
-      </section>
     </aside>
 
+    <!-- PETA -->
     <div id="map">
+
+      <!-- PILIH BASEMAP -->
       <div class="basemap-control">
-        <label><input type="radio" name="basemap" value="satelit" checked> Citra Satelit</label>
-        <label><input type="radio" name="basemap" value="osm"> OpenStreetMap</label>
+        <label>
+          <input type="radio" name="basemap" value="satelit" checked>
+          Citra Satelit
+        </label>
+
+        <label>
+          <input type="radio" name="basemap" value="osm">
+          OpenStreetMap
+        </label>
       </div>
 
-      <div class="map-legend">
-        <h3><i class="fa-solid fa-map"></i> Legenda Peta</h3>
-        <div class="legend-item"><span class="legend-area kab"></span><span>Batas Kabupaten</span></div>
-        <div class="legend-item"><span class="legend-area kec"></span><span>Batas Kecamatan</span></div>
-        <div class="legend-item"><span class="legend-area desa"></span><span>Batas Desa/Kelurahan</span></div>
-        <div class="legend-item"><span class="legend-line jalan"></span><span>Jaringan Jalan</span></div>
-        <div class="legend-item"><span class="legend-line pantai"></span><span>Garis Pantai</span></div>
-        <div class="legend-item"><span class="legend-symbol permukiman"><i class="fa-solid fa-house-chimney"></i></span><span>Permukiman</span></div>
-        <div class="legend-item"><span class="legend-symbol bangunan"><i class="fa-solid fa-building"></i></span><span>Bangunan</span></div>
-        <div class="legend-item"><span class="legend-symbol pemerintah"><i class="fa-solid fa-landmark"></i></span><span>Pemerintahan</span></div>
-        <div class="legend-item"><span class="legend-symbol wisata"><i class="fa-solid fa-umbrella-beach"></i></span><span>Pariwisata</span></div>
-        <div class="legend-item"><span class="legend-symbol wisata-sejarah"><i class="fa-solid fa-monument"></i></span><span>Wisata Sejarah</span></div>
+      <!-- AUTO ZOOM KECAMATAN -->
+      <div class="kecamatan-control">
+        <label for="zoomKecamatan">
+          <i class="fa-solid fa-magnifying-glass-location"></i>
+          Pilih Kecamatan
+        </label>
+
+        <select id="zoomKecamatan">
+          <option value="">Seluruh Wakatobi</option>
+          <option value="Wangi-Wangi">Wangi-Wangi</option>
+          <option value="Wangi-Wangi Selatan">Wangi-Wangi Selatan</option>
+          <option value="Kaledupa">Kaledupa</option>
+          <option value="Kaledupa Selatan">Kaledupa Selatan</option>
+          <option value="Kaledupa Timur">Kaledupa Timur</option>
+          <option value="Kaledupa Utara">Kaledupa Utara</option>
+          <option value="Tomia">Tomia</option>
+          <option value="Tomia Timur">Tomia Timur</option>
+          <option value="Binongko">Binongko</option>
+          <option value="Togo Binongko">Togo Binongko</option>
+        </select>
       </div>
+
+      <!-- LEGENDA -->
+      <div class="map-legend">
+
+        <h3><i class="fa-solid fa-map"></i> Legenda Peta</h3>
+
+        <div class="legend-item">
+          <span class="legend-area kab"></span>
+          <span>Batas Kabupaten</span>
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-area kec"></span>
+          <span>Batas Kecamatan</span>
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-area desa"></span>
+          <span>Batas Desa/Kelurahan</span>
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-line jalan"></span>
+          <span>Jaringan Jalan</span>
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-line pantai"></span>
+          <span>Garis Pantai</span>
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-symbol permukiman">
+            <i class="fa-solid fa-house-chimney"></i>
+          </span>
+          <span>Permukiman</span>
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-symbol bangunan">
+            <i class="fa-solid fa-building"></i>
+          </span>
+          <span>Bangunan</span>
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-symbol pemerintah">
+            <i class="fa-solid fa-landmark"></i>
+          </span>
+          <span>Pemerintahan</span>
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-symbol wisata">
+            <i class="fa-solid fa-umbrella-beach"></i>
+          </span>
+          <span>Pariwisata</span>
+        </div>
+
+        <div class="legend-item">
+          <span class="legend-symbol wisata-sejarah">
+            <i class="fa-solid fa-monument"></i>
+          </span>
+          <span>Wisata Sejarah</span>
+        </div>
+
+      </div>
+
     </div>
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
+
 </body>
 </html>
+```
