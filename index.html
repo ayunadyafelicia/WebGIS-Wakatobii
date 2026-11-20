@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -7,214 +6,112 @@
   <title>WebGIS Kabupaten Wakatobi</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-  <header>
+<header>
+  <div class="header-title">
     <i class="fa-solid fa-map-location-dot"></i>
-    WebGIS Kabupaten Wakatobi (Wangi-Wangi, Kaledupa, Tomia, Binongko)
-  </header>
+    <h1>WebGIS Kabupaten Wakatobi</h1>
+  </div>
+  <span class="badge-island">
+    <i class="fa-solid fa-satellite"></i> Citra Satelit
+  </span>
+</header>
 
-  <main>
+<aside id="panel">
+  <div id="statusData" class="status">Memuat data SHP dan OSM...</div>
 
-    <aside id="panel">
+  <div class="card search-box">
+    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+    <input type="text" id="searchInput" placeholder="Cari nama fasilitas atau jalan...">
+  </div>
 
-      <!-- FILTER OBJEK -->
-      <section>
-        <h3><i class="fa-solid fa-filter"></i> Filter Objek</h3>
-        <h4>Batas dan Jaringan</h4>
+  <!-- ZOOM PULAU -->
+  <div class="card filter-card">
+    <label for="pulauSel"><b><i class="fa-solid fa-location-crosshairs"></i> Zoom ke pulau:</b></label>
+    <select id="pulauSel">
+      <option value="ALL">Seluruh Wakatobi</option>
+      <option>Wangi-Wangi</option>
+      <option>Kaledupa</option>
+      <option>Tomia</option>
+      <option>Binongko</option>
+    </select>
+  </div>
 
-        <label class="filter-check">
-          <input type="checkbox" data-layer="kabupaten" checked>
-          Batas Kabupaten
-        </label>
+  <!-- ZOOM KECAMATAN -->
+  <div class="card filter-card">
+    <label for="zoomKecamatan">
+      <b><i class="fa-solid fa-map"></i> Zoom ke kecamatan:</b>
+    </label>
+    <select id="zoomKecamatan">
+      <option value="">Memuat kecamatan...</option>
+    </select>
+  </div>
 
-        <label class="filter-check">
-          <input type="checkbox" data-layer="kecamatan" checked>
-          Batas Kecamatan
-        </label>
+  <!-- FILTER JALAN -->
+  <div class="card filter-card">
+    <label for="filterJalan">
+      <b><i class="fa-solid fa-road"></i> Jenis/kelas jalan:</b>
+    </label>
+    <select id="filterJalan">
+      <option value="ALL">Semua jenis jalan</option>
+    </select>
+  </div>
 
-        <label class="filter-check">
-          <input type="checkbox" data-layer="desa" checked>
-          Batas Desa/Kelurahan
-        </label>
+  <label><i class="fa-solid fa-filter"></i> <b>Filter fasilitas:</b></label>
 
-        <label class="filter-check">
-          <input type="checkbox" data-layer="jalan" checked>
-          Jaringan Jalan
-        </label>
+  <div class="chips-container">
+    <button class="chip active" data-category="ALL">Semua</button>
+    <button class="chip" data-category="Pariwisata">
+      <i class="fa-solid fa-umbrella-beach"></i> Pariwisata
+    </button>
+    <button class="chip" data-category="Pendidikan">
+      <i class="fa-solid fa-graduation-cap"></i> Pendidikan
+    </button>
+    <button class="chip" data-category="Kesehatan">
+      <i class="fa-solid fa-hospital"></i> Kesehatan
+    </button>
+    <button class="chip" data-category="Pemerintahan">
+      <i class="fa-solid fa-building-columns"></i> Pemerintahan
+    </button>
+    <button class="chip" data-category="Permukiman">
+      <i class="fa-solid fa-house-chimney"></i> Permukiman
+    </button>
+  </div>
 
-        <label class="filter-check">
-          <input type="checkbox" data-layer="pantai" checked>
-          Garis Pantai
-        </label>
-      </section>
+  <hr>
 
-      <!-- PENGGUNAAN LAHAN -->
-      <section>
-        <h4>Penggunaan Lahan dan Fasilitas</h4>
-
-        <label class="filter-check">
-          <input type="checkbox" data-layer="permukiman">
-          Permukiman
-        </label>
-
-        <label class="filter-check">
-          <input type="checkbox" data-layer="bangunan">
-          Bangunan
-        </label>
-
-        <label class="filter-check">
-          <input type="checkbox" data-layer="pemerintahan">
-          Pemerintahan
-        </label>
-      </section>
-
-      <!-- PARIWISATA -->
-      <section>
-        <h4>Pariwisata</h4>
-
-        <label class="filter-check">
-          <input type="checkbox" data-layer="pariwisata" checked>
-          Tampilkan Pariwisata
-        </label>
-
-        <div class="chip-container">
-          <button class="chip active" data-category="semua">Semua</button>
-          <button class="chip" data-category="wisata-bahari">Wisata Bahari</button>
-          <button class="chip" data-category="wisata-pantai">Wisata Pantai</button>
-          <button class="chip" data-category="wisata-alam">Wisata Alam</button>
-          <button class="chip" data-category="wisata-budaya">Wisata Budaya</button>
-          <button class="chip" data-category="wisata-sejarah">Wisata Sejarah</button>
-        </div>
-      </section>
-
-      <!-- DETAIL OBJEK -->
-      <section>
-        <h3><i class="fa-solid fa-circle-info"></i> Detail Objek</h3>
-
-        <div id="hasil">
-          <i class="fa-solid fa-hand-pointer"></i>
-          <p>Klik ikon, garis, atau area di peta.</p>
-        </div>
-      </section>
-
-    </aside>
-
-    <!-- PETA -->
-    <div id="map">
-
-      <!-- PILIH BASEMAP -->
-      <div class="basemap-control">
-        <label>
-          <input type="radio" name="basemap" value="satelit" checked>
-          Citra Satelit
-        </label>
-
-        <label>
-          <input type="radio" name="basemap" value="osm">
-          OpenStreetMap
-        </label>
-      </div>
-
-      <!-- AUTO ZOOM KECAMATAN -->
-      <div class="kecamatan-control">
-        <label for="zoomKecamatan">
-          <i class="fa-solid fa-magnifying-glass-location"></i>
-          Pilih Kecamatan
-        </label>
-
-        <select id="zoomKecamatan">
-          <option value="">Seluruh Wakatobi</option>
-          <option value="Wangi-Wangi">Wangi-Wangi</option>
-          <option value="Wangi-Wangi Selatan">Wangi-Wangi Selatan</option>
-          <option value="Kaledupa">Kaledupa</option>
-          <option value="Kaledupa Selatan">Kaledupa Selatan</option>
-          <option value="Kaledupa Timur">Kaledupa Timur</option>
-          <option value="Kaledupa Utara">Kaledupa Utara</option>
-          <option value="Tomia">Tomia</option>
-          <option value="Tomia Timur">Tomia Timur</option>
-          <option value="Binongko">Binongko</option>
-          <option value="Togo Binongko">Togo Binongko</option>
-        </select>
-      </div>
-
-      <!-- LEGENDA -->
-      <div class="map-legend">
-
-        <h3><i class="fa-solid fa-map"></i> Legenda Peta</h3>
-
-        <div class="legend-item">
-          <span class="legend-area kab"></span>
-          <span>Batas Kabupaten</span>
-        </div>
-
-        <div class="legend-item">
-          <span class="legend-area kec"></span>
-          <span>Batas Kecamatan</span>
-        </div>
-
-        <div class="legend-item">
-          <span class="legend-area desa"></span>
-          <span>Batas Desa/Kelurahan</span>
-        </div>
-
-        <div class="legend-item">
-          <span class="legend-line jalan"></span>
-          <span>Jaringan Jalan</span>
-        </div>
-
-        <div class="legend-item">
-          <span class="legend-line pantai"></span>
-          <span>Garis Pantai</span>
-        </div>
-
-        <div class="legend-item">
-          <span class="legend-symbol permukiman">
-            <i class="fa-solid fa-house-chimney"></i>
-          </span>
-          <span>Permukiman</span>
-        </div>
-
-        <div class="legend-item">
-          <span class="legend-symbol bangunan">
-            <i class="fa-solid fa-building"></i>
-          </span>
-          <span>Bangunan</span>
-        </div>
-
-        <div class="legend-item">
-          <span class="legend-symbol pemerintah">
-            <i class="fa-solid fa-landmark"></i>
-          </span>
-          <span>Pemerintahan</span>
-        </div>
-
-        <div class="legend-item">
-          <span class="legend-symbol wisata">
-            <i class="fa-solid fa-umbrella-beach"></i>
-          </span>
-          <span>Pariwisata</span>
-        </div>
-
-        <div class="legend-item">
-          <span class="legend-symbol wisata-sejarah">
-            <i class="fa-solid fa-monument"></i>
-          </span>
-          <span>Wisata Sejarah</span>
-        </div>
-
-      </div>
-
+  <h4><i class="fa-solid fa-circle-info"></i> Detail objek</h4>
+  <div id="hasil" class="detail-card">
+    <div class="empty-state">
+      <i class="fa-solid fa-hand-pointer"></i>
+      <p>Klik titik atau ruas jalan pada peta.</p>
     </div>
-  </main>
+  </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js"></script>
+  <hr>
+
+  <h4><i class="fa-solid fa-chart-line"></i> Panjang jalan (km)</h4>
+  <div id="statistikContainer">
+    <div class="empty-state">Menunggu data jalan...</div>
+  </div>
+
+  <h4><i class="fa-solid fa-list"></i> Jumlah titik fasilitas</h4>
+  <div id="rekap"></div>
+
+  <h4><i class="fa-solid fa-bug"></i> Log pemuatan data</h4>
+  <div id="log" aria-live="polite"></div>
+</aside>
+
+<main id="map" aria-label="Peta WebGIS Kabupaten Wakatobi"></main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/shpjs@4.0.4/dist/shp.min.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>
-```
