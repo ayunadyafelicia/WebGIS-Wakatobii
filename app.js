@@ -57,11 +57,12 @@ const GAYA = {
   pantai: { color: '#00e5ff', weight: 3, dashArray: '8 6' }
 };
 const CATS = {
-  Pariwisata: { cls: 'bg-pariwisata', icon: 'fa-umbrella-beach' },
-  Pendidikan: { cls: 'bg-pendidikan', icon: 'fa-graduation-cap' },
-  Kesehatan: { cls: 'bg-kesehatan', icon: 'fa-hospital' },
-  Pemerintahan: { cls: 'bg-pemerintahan', icon: 'fa-building-columns' },
-  Lainnya: { cls: 'bg-lainnya', icon: 'fa-location-dot' }
+  Pariwisata: { cls: 'bg-pariwisata', icon: 'fa-umbrella-beach', warna: '#e67e22' },
+  Pendidikan: { cls: 'bg-pendidikan', icon: 'fa-graduation-cap', warna: '#2980b9' },
+  Kesehatan: { cls: 'bg-kesehatan', icon: 'fa-hospital', warna: '#e74c3c' },
+  Pemerintahan: { cls: 'bg-pemerintahan', icon: 'fa-building-columns', warna: '#8e44ad' },
+  Bangunan: { cls: 'bg-bangunan', icon: 'fa-building', warna: '#3949ab' },
+  Lainnya: { cls: 'bg-lainnya', icon: 'fa-location-dot', warna: '#34495e' }
 };
 const ISLAND_BOUNDS = {
   'Wangi-Wangi': [[-5.48, 123.43], [-5.20, 123.65]],
@@ -118,8 +119,8 @@ function markerIcon(category) {
   return L.divIcon({ className: '', html: `<div class="custom-marker ${c.cls}"><i class="fa-solid ${c.icon}"></i></div>`, iconSize: [30, 30], iconAnchor: [15, 15] });
 }
 function detail(title, category, rows) {
-  const c = CATS[category] || { cls: 'bg-lainnya' };
-  setHTML('hasil', `<div class="detail-title">${esc(title)}</div><span class="detail-category ${c.cls}">${esc(category)}</span><hr style="margin:6px 0">` +
+  const c = CATS[category] || CATS.Lainnya;
+  setHTML('hasil', `<div class="detail-title">${esc(title)}</div><span class="detail-category" style="background:${c.warna}">${esc(category)}</span><hr style="margin:6px 0">` +
     rows.map(([k, v]) => `<div class="detail-info-row"><b>${esc(k)}:</b> ${esc(v)}</div>`).join(''));
 }
 function featureCollection(v) {
@@ -207,36 +208,43 @@ function warnaKelas(k) {
   return roadColor[k];
 }
 
-/* ===== LEGENDA LENGKAP ===== */
+/* ===== LEGENDA LENGKAP (simbol sama dengan di peta, ditulis inline) ===== */
 const legendDiv = L.DomUtil.create('div', 'legend');
 const legend = L.control({ position: 'bottomright' });
 legend.onAdd = () => legendDiv;
 function renderLegend() {
-  const garis = (label, warna) => `<div class="legend-item"><span class="legend-line" style="background:${warna}"></span>${esc(label)}</div>`;
-  const putus = (label, warna, border) => `<div class="legend-item"><span class="legend-dash" style="border-color:${warna}${border ? ';outline:0' : ''}"></span>${esc(label)}</div>`;
-  const area = (label, warna, isi) => `<div class="legend-item"><span class="legend-box" style="border-color:${warna};background:${isi}"></span>${esc(label)}</div>`;
+  const bungkus = sym => `<span style="width:26px;display:inline-flex;justify-content:center;align-items:center;flex:none">${sym}</span>`;
+  const baris = (sym, label) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">${bungkus(sym)}<span>${esc(label)}</span></div>`;
+  const seksi = t => `<div style="font-weight:bold;color:#0e6251;margin:8px 0 3px">${t}</div>`;
+
+  const garis = w => `<span style="display:inline-block;width:24px;height:4px;border-radius:2px;background:${w}"></span>`;
+  const putus = w => `<span style="display:inline-block;width:24px;height:0;border-top:3px dashed ${w}"></span>`;
+  const titik = w => `<span style="display:inline-block;width:24px;height:0;border-top:3px dotted ${w}"></span>`;
+  const kotak = (b, f) => `<span style="display:inline-block;width:24px;height:12px;border-radius:2px;border:2px solid ${b};background:${f}"></span>`;
+  const kotakGelap = w => `<span style="display:inline-block;width:24px;height:12px;border-radius:2px;background:#263238;position:relative"><span style="position:absolute;left:2px;right:2px;top:4px;border-top:2px dotted ${w}"></span></span>`;
+  const bulat = (bg, icon) => `<span style="display:inline-flex;justify-content:center;align-items:center;width:22px;height:22px;border-radius:50%;background:${bg};color:#fff;font-size:11px;border:2px solid #fff;box-shadow:0 1px 4px #0007"><i class="fa-solid ${icon}"></i></span>`;
 
   const batas =
-    area('Batas kabupaten', '#f4e342', '#f4e34233') +
-    putus('Batas kecamatan', '#ff8c42') +
-    putus('Batas desa/kelurahan', '#95a5a6') +
-    garis('Garis pantai', '#00e5ff').replace('legend-line', 'legend-dash').replace(`background:#00e5ff`, 'border-color:#00e5ff;background:none');
+    baris(kotak('#f4e342', '#f4e34233'), 'Batas kabupaten') +
+    baris(putus('#ff8c42'), 'Batas kecamatan') +
+    baris(kotakGelap('#ffffff'), 'Batas desa/kelurahan') +
+    baris(putus('#00e5ff'), 'Garis pantai');
 
   const lahan =
-    area('Permukiman', '#8e44ad', '#8e44ad66') +
-    area('Bangunan', '#3949ab', '#3949ab80');
+    baris(kotak('#8e44ad', '#8e44ad66'), 'Permukiman') +
+    baris(bulat('linear-gradient(135deg,#5c6bc0,#283593)', 'fa-building'), 'Bangunan');
 
-  const jalan = Object.keys(roadColor).sort().map(k => garis(k, roadColor[k])).join('');
+  const jalan = Object.keys(roadColor).sort().map(k => baris(garis(roadColor[k]), k)).join('');
 
-  const fasilitas = Object.entries(CATS).filter(([k]) => k !== 'Lainnya').map(([k, c]) =>
-    `<div class="legend-item"><span class="legend-dot ${c.cls}"><i class="fa-solid ${c.icon}"></i></span>${esc(k)}</div>`).join('');
+  const fasilitas = ['Pariwisata', 'Pendidikan', 'Kesehatan', 'Pemerintahan'].map(k =>
+    baris(bulat(CATS[k].warna, CATS[k].icon), k)).join('');
 
   legendDiv.innerHTML =
     `<div class="legend-title">Legenda</div>` +
-    `<div class="legend-section">Batas wilayah</div>${batas}` +
-    `<div class="legend-section">Permukiman &amp; bangunan</div>${lahan}` +
-    (jalan ? `<div class="legend-section">Jaringan jalan</div>${jalan}` : '') +
-    `<div class="legend-section">Fasilitas</div>${fasilitas}`;
+    seksi('Batas wilayah') + batas +
+    seksi('Permukiman &amp; bangunan') + lahan +
+    (jalan ? seksi('Jaringan jalan') + jalan : '') +
+    seksi('Fasilitas') + fasilitas;
   legend.addTo(map);
 }
 function addRoads(fc, file) {
@@ -262,7 +270,7 @@ function addRoads(fc, file) {
   renderLegend();
 }
 
-/* ===== BANGUNAN (simbol gedung) ===== */
+/* ===== BANGUNAN (simbol gedung + keterangan seperti fasilitas lain) ===== */
 const iconBangunan = L.divIcon({
   className: '',
   html: '<div class="custom-marker marker-bangunan"><i class="fa-solid fa-building"></i></div>',
@@ -275,9 +283,17 @@ function tampilBangunan(fc, file) {
     style: () => ({ color: '#3949ab', weight: 1, fillColor: '#3949ab', fillOpacity: 0.5 }),
     pointToLayer: (f, ll) => L.marker(ll, { icon: iconBangunan }),
     onEachFeature: (f, l) => {
-      const p = f.properties || {}, nm = firstProp(p, NAMA_KEYS);
-      if (nm) l.bindTooltip(esc(nm), { sticky: true });
-      l.on('click', () => detail(nm || 'Bangunan', 'Lainnya', [['Layer', file], ...dataRows(p)]));
+      const p = f.properties || {};
+      const nm = remarkOf(p) || firstProp(p, NAMA_KEYS) || 'Bangunan';
+      const ll = l.getLatLng ? l.getLatLng() : l.getBounds().getCenter();
+      l.bindTooltip(esc(nm), { sticky: true });
+      l.on('click', () => detail(String(nm), 'Bangunan', [
+        ['Pulau/area', islandFrom(ll.lat, ll.lng)],
+        ['Sumber data', file],
+        ['Lintang', ll.lat.toFixed(6)],
+        ['Bujur', ll.lng.toFixed(6)],
+        ...dataRows(p, 8)
+      ]));
     }
   }).addTo(G.bangunan);
 }
