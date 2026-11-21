@@ -1,11 +1,9 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f6f7; }
 
-header { position: absolute; top: 0; left: 0; right: 0; height: 60px; background: linear-gradient(135deg,#117864,#0e6251); color: #fff; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px #0004; z-index: 1000; }
-.header-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.header-title i { font-size: 22px; color: #2ecc71; }
-header h1 { font-size: 17px; font-weight: 600; }
-.badge-island { background: #ffffff33; padding: 6px 12px; border-radius: 20px; font-size: 12px; white-space: nowrap; }
+/* HEADER (memakai gambar HEADER.png) */
+header { position: absolute; top: 0; left: 0; right: 0; height: 60px; background: #0e6251; padding: 0; box-shadow: 0 2px 10px #0004; z-index: 1000; overflow: hidden; }
+header img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
 #map { position: absolute; top: 60px; bottom: 0; left: 350px; right: 0; z-index: 1; background: #e5e8e8; }
 #panel { position: absolute; top: 60px; bottom: 0; left: 0; width: 350px; background: #fff; padding: 16px; overflow-y: auto; border-right: 1px solid #d5dbdb; box-shadow: 3px 0 10px #0002; z-index: 2; }
@@ -24,7 +22,7 @@ header h1 { font-size: 17px; font-weight: 600; }
 .chip { background: #f0f3f4; border: 1px solid #d5dbdb; border-radius: 16px; padding: 5px 10px; font-size: 11px; font-weight: 600; color: #34495e; cursor: pointer; display: flex; align-items: center; gap: 5px; }
 .chip.active { background: #0e6251; color: #fff; border-color: #0e6251; }
 
-/* KOTAK CENTANG LAPISAN */
+/* KOTAK CENTANG JARINGAN */
 .layer-check { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 8px; color: #34495e; cursor: pointer; }
 .layer-check input { accent-color: #0e6251; width: 14px; height: 14px; cursor: pointer; }
 
@@ -55,15 +53,19 @@ hr { margin: 14px 0; border: 0; border-top: 1px solid #eaeded; }
 .marker-bangunan { width: 24px; height: 24px; background: linear-gradient(135deg, #5c6bc0, #283593); box-shadow: 0 2px 6px #0007; }
 .marker-bangunan i { font-size: 11px; }
 
-/* LEGENDA JALAN */
+/* LEGENDA */
 .legend { background: #fffffff2; padding: 12px; border-radius: 8px; box-shadow: 0 0 12px #0004; font-size: 11px; line-height: 20px; max-height: 60vh; overflow-y: auto; }
 .legend-title { font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid #ccc; color: #2c3e50; }
 .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
 .legend-line { display: inline-block; width: 22px; height: 4px; border-radius: 2px; }
 
+/* LEGENDA LENGKAP */
+.legend-section { font-weight: bold; font-size: 11px; color: #0e6251; margin: 8px 0 2px; }
+.legend-box { display: inline-block; width: 22px; height: 12px; border-radius: 2px; border: 1.5px solid; }
+.legend-dash { display: inline-block; width: 22px; height: 0; border-top: 3px dashed; }
+.legend-dot { display: inline-flex; justify-content: center; align-items: center; width: 20px; height: 20px; border-radius: 50%; color: #fff; font-size: 10px; border: 1.5px solid #fff; box-shadow: 0 1px 3px #0006; }
+
 @media (max-width: 700px) {
   #panel { width: 290px; }
   #map { left: 290px; }
-  header h1 { font-size: 13px; }
-  .badge-island { display: none; }
 }
