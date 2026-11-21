@@ -87,6 +87,10 @@ function firstProp(p, keys) {
 }
 const NAMA_KEYS = ['NAMOBJ', 'NAMA', 'nama', 'NAME', 'name', 'namobj'];
 const dataRows = (p, n = 12) => Object.entries(p || {}).filter(([, v]) => v !== null && v !== '' && typeof v !== 'object').slice(0, n);
+const remarkOf = p => {
+  const k = Object.keys(p || {}).find(x => x.toUpperCase() === 'REMARK');
+  return k && p[k] !== null && String(p[k]).trim() !== '' ? String(p[k]).trim() : '';
+};
 function islandFrom(lat, lon) {
   if (lat > -5.48 && lon < 123.68) return 'Wangi-Wangi';
   if (lat > -5.58 && lon >= 123.65 && lon < 123.87) return 'Kaledupa';
@@ -228,12 +232,18 @@ function addRoads(fc, file) {
   renderLegend();
 }
 
-/* ===== BANGUNAN (titik/area merah muda) ===== */
+/* ===== BANGUNAN (simbol gedung) ===== */
+const iconBangunan = L.divIcon({
+  className: '',
+  html: '<div class="custom-marker marker-bangunan"><i class="fa-solid fa-building"></i></div>',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12]
+});
 function tampilBangunan(fc, file) {
   L.geoJSON(fc, {
     pane: 'p-bangunan',
-    style: () => ({ color: '#e84393', weight: 1, fillColor: '#e84393', fillOpacity: 0.5 }),
-    pointToLayer: (f, ll) => L.circleMarker(ll, { pane: 'p-bangunan', radius: 4, color: '#ffffff', weight: 1, fillColor: '#e84393', fillOpacity: 0.9 }),
+    style: () => ({ color: '#3949ab', weight: 1, fillColor: '#3949ab', fillOpacity: 0.5 }),
+    pointToLayer: (f, ll) => L.marker(ll, { icon: iconBangunan }),
     onEachFeature: (f, l) => {
       const p = f.properties || {}, nm = firstProp(p, NAMA_KEYS);
       if (nm) l.bindTooltip(esc(nm), { sticky: true });
@@ -242,9 +252,8 @@ function tampilBangunan(fc, file) {
   }).addTo(G.bangunan);
 }
 
-/* ===== PEMERINTAHAN (jadi titik fasilitas) ===== */
+/* ===== PEMERINTAHAN (judul dan keterangan dari kolom REMARK) ===== */
 function titikPemerintahan(fc, file) {
-  let added = 0;
   fc.features.forEach(f => {
     if (!f.geometry) return;
     const p = f.properties || {};
@@ -254,9 +263,13 @@ function titikPemerintahan(fc, file) {
     else if (g.type === 'MultiPoint') coord = g.coordinates[0];
     else { try { coord = turf.pointOnFeature(f).geometry.coordinates; } catch (e) { /* abaikan */ } }
     if (!coord || coord.length < 2) return;
-    const nm = firstProp(p, NAMA_KEYS) || `Pemerintahan ${added + 1}`;
-    addPoint({ name: String(nm), category: 'Pemerintahan', lat: Number(coord[1]), lon: Number(coord[0]), source: file, properties: p });
-    added++;
+    const remark = remarkOf(p);
+    const nm = remark || firstProp(p, NAMA_KEYS) || 'Pemerintahan';
+    addPoint({
+      name: String(nm), category: 'Pemerintahan',
+      lat: Number(coord[1]), lon: Number(coord[0]), source: file,
+      properties: remark ? { REMARK: remark, ...p } : p
+    });
   });
 }
 
