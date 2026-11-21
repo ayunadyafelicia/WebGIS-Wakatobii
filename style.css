@@ -1,8 +1,11 @@
-:root { --header-h: calc(100vw * 160 / 2048); }
+:root {
+  --header-h: calc(100vw * 160 / 2048);
+  --font: 'Arial Narrow', 'Archivo Narrow', 'Liberation Sans Narrow', 'Roboto Condensed', Arial, sans-serif;
+}
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: Calibri, Carlito, 'Segoe UI', sans-serif; }
-html, body { width: 100%; height: 100%; overflow: hidden; font-family: Calibri, Carlito, 'Segoe UI', sans-serif; background: #f4f6f7; }
-button, select, input, textarea, .leaflet-container, .leaflet-tooltip, .leaflet-control, .leaflet-popup, .legend { font-family: Calibri, Carlito, 'Segoe UI', sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
+html, body { width: 100%; height: 100%; overflow: hidden; font-family: var(--font); background: #f4f6f7; }
+button, select, input, textarea, .leaflet-container, .leaflet-tooltip, .leaflet-control, .leaflet-popup, .legend { font-family: var(--font); }
 
 header { position: absolute; top: 0; left: 0; right: 0; height: var(--header-h); background: #0e6251; padding: 0; box-shadow: 0 2px 10px #0004; z-index: 1000; overflow: hidden; }
 header img { display: block; width: 100%; height: 100%; object-fit: fill; }
@@ -42,7 +45,15 @@ hr { margin: 14px 0; border: 0; border-top: 1px solid #eaeded; }
 .stat-table td.num, .stat-table th.num { text-align: right; }
 
 .custom-marker { display: flex; justify-content: center; align-items: center; width: 30px; height: 30px; border-radius: 50%; color: #fff; box-shadow: 0 3px 8px #0008; border: 2px solid #fff; }
-.bg-pariwisata { background: #e67e22; }
+/* jenis wisata */
+.bg-w-pantai { background: #e67e22; }
+.bg-w-bahari { background: #0097a7; }
+.bg-w-sejarah { background: #8d6e63; }
+.bg-w-alam { background: #2e7d32; }
+.bg-w-desa { background: #9e9d24; }
+.bg-w-inap { background: #d81b60; }
+.bg-w-lain { background: #607d8b; }
+/* fasilitas lain */
 .bg-pendidikan { background: #2980b9; }
 .bg-kesehatan { background: #e74c3c; }
 .bg-pemerintahan { background: #8e44ad; }
@@ -64,4 +75,14 @@ hr { margin: 14px 0; border: 0; border-top: 1px solid #eaeded; }
 @media (max-width: 700px) {
   #panel { width: 290px; }
   #map { left: 290px; }
+}
+
+/* PAKSA FONT (Arial Narrow / Archivo Narrow), kecuali ikon Font Awesome */
+html, body, button, select, option, input, textarea, label, p, span, div, td, th, b, h4,
+.leaflet-container, .leaflet-container *, .leaflet-tooltip, .leaflet-control, .leaflet-control *,
+.legend, .legend *, .detail-card, .detail-card *, .stat-table, .stat-table * {
+  font-family: var(--font) !important;
+}
+.fa-solid, .fas, .fa-regular, .far {
+  font-family: 'Font Awesome 6 Free' !important;
 }
