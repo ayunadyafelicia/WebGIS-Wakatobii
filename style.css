@@ -1,6 +1,6 @@
 
 :root {
-  --header-h: 85px;
+  --header-h: 65px;
 }
 
 * {
@@ -42,7 +42,7 @@ header img {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
 }
 
@@ -368,6 +368,10 @@ hr {
 
 /* RESPONSIVE */
 @media (max-width: 700px) {
+  :root {
+    --header-h: 55px;
+  }
+
   #panel {
     width: 290px;
   }
