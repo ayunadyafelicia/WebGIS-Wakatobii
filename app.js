@@ -10,8 +10,10 @@ function setStatus(text, error) {
 }
 
 /* ===== PETA & BASEMAP (bisa di-zoom sedetail mungkin) ===== */
-// preferCanvas dimatikan agar semua area (permukiman, dll.) bisa diklik
-const map = L.map('map', { maxZoom: 22 }).setView([-5.55, 123.75], 9);
+// Semua lapisan vektor digambar di SATU canvas: ringan, dan semua area tetap bisa diklik
+const kanvas = L.canvas({ padding: 0.5 });
+L.Path.mergeOptions({ renderer: kanvas });
+const map = L.map('map', { preferCanvas: true, maxZoom: 22 }).setView([-5.55, 123.75], 9);
 const imagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
   maxZoom: 22, maxNativeZoom: 17, attribution: 'Esri, Maxar'   // jika masih muncul "Map data not yet available", turunkan ke 16
 }).addTo(map);
