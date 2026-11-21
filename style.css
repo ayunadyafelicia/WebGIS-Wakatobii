@@ -16,17 +16,17 @@ header h1 { font-size: 17px; font-weight: 600; }
 
 .card { background: #f8f9f9; padding: 10px; border-radius: 6px; border: 1px solid #ebedef; }
 .filter-card { margin-bottom: 8px; }
+.layer-card { margin-top: 12px; }
 #panel select { width: 100%; padding: 7px; font-size: 12px; border-radius: 6px; border: 1px solid #bdc3c7; background: #fff; margin-top: 4px; cursor: pointer; }
 #panel select:focus { outline: none; border-color: #0e6251; box-shadow: 0 0 4px #0e62514d; }
-
-.search-box { position: relative; margin-bottom: 12px; }
-.search-box input { width: 100%; padding: 10px 10px 10px 36px; border-radius: 8px; border: 1px solid #bdc3c7; font-size: 13px; }
-.search-box input:focus { outline: none; border-color: #0e6251; box-shadow: 0 0 5px #0e62514d; }
-.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #7f8c8d; }
 
 .chips-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .chip { background: #f0f3f4; border: 1px solid #d5dbdb; border-radius: 16px; padding: 5px 10px; font-size: 11px; font-weight: 600; color: #34495e; cursor: pointer; display: flex; align-items: center; gap: 5px; }
 .chip.active { background: #0e6251; color: #fff; border-color: #0e6251; }
+
+/* KOTAK CENTANG LAPISAN */
+.layer-check { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 8px; color: #34495e; cursor: pointer; }
+.layer-check input { accent-color: #0e6251; width: 14px; height: 14px; cursor: pointer; }
 
 .detail-card { background: #f8f9f9; border-radius: 8px; padding: 12px; border-left: 4px solid #0e6251; overflow-wrap: anywhere; }
 .empty-state { text-align: center; padding: 15px 5px; color: #95a5a6; font-size: 12px; }
@@ -52,13 +52,10 @@ hr { margin: 14px 0; border: 0; border-top: 1px solid #eaeded; }
 .bg-lainnya { background: #34495e; }
 
 /* LEGENDA JALAN */
-.legend { background: #fffffff2; padding: 12px; border-radius: 8px; box-shadow: 0 0 12px #0004; font-size: 11px; line-height: 20px; }
+.legend { background: #fffffff2; padding: 12px; border-radius: 8px; box-shadow: 0 0 12px #0004; font-size: 11px; line-height: 20px; max-height: 60vh; overflow-y: auto; }
 .legend-title { font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid #ccc; color: #2c3e50; }
 .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
 .legend-line { display: inline-block; width: 22px; height: 4px; border-radius: 2px; }
-
-/* LOG PEMUATAN DATA */
-#log { font-size: 11px; line-height: 1.5; max-height: 160px; overflow-y: auto; white-space: pre-wrap; background: #f8f9f9; border: 1px solid #ebedef; border-radius: 6px; padding: 8px; color: #566573; }
 
 @media (max-width: 700px) {
   #panel { width: 290px; }
