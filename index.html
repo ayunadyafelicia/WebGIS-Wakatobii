@@ -24,11 +24,6 @@
 <aside id="panel">
   <div id="statusData" class="status">Memuat data GeoJSON dan OSM...</div>
 
-  <div class="card search-box">
-    <i class="fa-solid fa-magnifying-glass search-icon"></i>
-    <input type="text" id="searchInput" placeholder="Cari nama fasilitas atau jalan...">
-  </div>
-
   <!-- ZOOM PULAU -->
   <div class="card filter-card">
     <label for="pulauSel"><b><i class="fa-solid fa-location-crosshairs"></i> Zoom ke pulau:</b></label>
@@ -38,16 +33,6 @@
       <option>Kaledupa</option>
       <option>Tomia</option>
       <option>Binongko</option>
-    </select>
-  </div>
-
-  <!-- FILTER JALAN -->
-  <div class="card filter-card">
-    <label for="filterJalan">
-      <b><i class="fa-solid fa-road"></i> Jenis/kelas jalan:</b>
-    </label>
-    <select id="filterJalan">
-      <option value="ALL">Semua jenis jalan</option>
     </select>
   </div>
 
@@ -72,13 +57,26 @@
     </button>
   </div>
 
+  <!-- TAMPILKAN LAPISAN -->
+  <div class="card filter-card layer-card">
+    <b><i class="fa-solid fa-layer-group"></i> Tampilkan lapisan:</b>
+    <label class="layer-check"><input type="checkbox" data-layer="kabupaten" checked> Batas kabupaten</label>
+    <label class="layer-check"><input type="checkbox" data-layer="kecamatan" checked> Batas kecamatan</label>
+    <label class="layer-check"><input type="checkbox" data-layer="desa" checked> Batas desa/kelurahan</label>
+    <label class="layer-check"><input type="checkbox" data-layer="permukiman" checked> Permukiman</label>
+    <label class="layer-check"><input type="checkbox" data-layer="bangunan" checked> Bangunan</label>
+    <label class="layer-check"><input type="checkbox" data-layer="pantai" checked> Garis pantai</label>
+    <label class="layer-check"><input type="checkbox" data-layer="jalan" checked> Jaringan jalan</label>
+    <label class="layer-check"><input type="checkbox" data-layer="titik" checked> Titik fasilitas</label>
+  </div>
+
   <hr>
 
   <h4><i class="fa-solid fa-circle-info"></i> Detail objek</h4>
   <div id="hasil" class="detail-card">
     <div class="empty-state">
       <i class="fa-solid fa-hand-pointer"></i>
-      <p>Klik titik atau ruas jalan pada peta.</p>
+      <p>Klik titik, area, atau ruas jalan pada peta.</p>
     </div>
   </div>
 
@@ -91,9 +89,6 @@
 
   <h4><i class="fa-solid fa-list"></i> Jumlah titik fasilitas</h4>
   <div id="rekap"></div>
-
-  <h4><i class="fa-solid fa-bug"></i> Log pemuatan data</h4>
-  <div id="log" aria-live="polite"></div>
 </aside>
 
 <main id="map" aria-label="Peta WebGIS Kabupaten Wakatobi"></main>
