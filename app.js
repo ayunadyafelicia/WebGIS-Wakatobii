@@ -25,9 +25,17 @@ URUTAN.forEach((n, i) => { map.createPane('p-' + n).style.zIndex = 401 + i; });
 const G = {};
 URUTAN.concat(['titik']).forEach(n => { G[n] = L.layerGroup().addTo(map); });
 
+// Kotak centang jaringan
 document.querySelectorAll('input[data-layer]').forEach(cb => cb.addEventListener('change', () => {
   const g = G[cb.dataset.layer];
   if (g) cb.checked ? g.addTo(map) : map.removeLayer(g);
+}));
+// Tombol fasilitas yang berupa lapisan area (Permukiman, Bangunan)
+document.querySelectorAll('.chip[data-layer]').forEach(btn => btn.addEventListener('click', () => {
+  const g = G[btn.dataset.layer];
+  if (!g) return;
+  const aktif = btn.classList.toggle('active');
+  aktif ? g.addTo(map) : map.removeLayer(g);
 }));
 
 /* ===== KONFIGURASI ===== */
@@ -53,7 +61,6 @@ const CATS = {
   Pendidikan: { cls: 'bg-pendidikan', icon: 'fa-graduation-cap' },
   Kesehatan: { cls: 'bg-kesehatan', icon: 'fa-hospital' },
   Pemerintahan: { cls: 'bg-pemerintahan', icon: 'fa-building-columns' },
-  Permukiman: { cls: 'bg-permukiman', icon: 'fa-house-chimney' },
   Lainnya: { cls: 'bg-lainnya', icon: 'fa-location-dot' }
 };
 const ISLAND_BOUNDS = {
@@ -104,7 +111,6 @@ function classifyText(text) {
   if (/puskesmas|pustu|rumah sakit|rsud|klinik|dokter|posyandu|polindes|poskesdes|apotek|kesehatan/.test(t)) return 'Kesehatan';
   if (/kantor|camat|bupati|dprd|kelurahan|kecamatan|polres|polsek|koramil|kodim|pemerintah|balai desa|instansi/.test(t)) return 'Pemerintahan';
   if (/pantai|wisata|destinasi|benteng|gua|goa|diving|selam|resort|keraton|museum|air terjun|tourism/.test(t)) return 'Pariwisata';
-  if (/permukiman|pemukiman|perumahan|kampung|dusun|village|residential/.test(t)) return 'Permukiman';
   return null;
 }
 function markerIcon(category) {
@@ -159,8 +165,8 @@ function applyPointFilters() {
     else G.titik.removeLayer(m);
   });
 }
-document.querySelectorAll('.chip').forEach(btn => btn.addEventListener('click', () => {
-  document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+document.querySelectorAll('.chip[data-category]').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.chip[data-category]').forEach(x => x.classList.remove('active'));
   btn.classList.add('active'); currentCategory = btn.dataset.category; applyPointFilters();
 }));
 on('pulauSel', 'change', e => map.fitBounds(e.target.value === 'ALL' ? ALL_BOUNDS : ISLAND_BOUNDS[e.target.value]));
@@ -200,13 +206,37 @@ function warnaKelas(k) {
   roadColor[k] = m ? m[1] : PALET[Object.keys(roadColor).length % PALET.length];
   return roadColor[k];
 }
+
+/* ===== LEGENDA LENGKAP ===== */
 const legendDiv = L.DomUtil.create('div', 'legend');
 const legend = L.control({ position: 'bottomright' });
 legend.onAdd = () => legendDiv;
 function renderLegend() {
-  const items = Object.keys(roadColor).sort().map(k =>
-    `<div class="legend-item"><span class="legend-line" style="background:${roadColor[k]}"></span>${esc(k)}</div>`).join('');
-  legendDiv.innerHTML = `<div class="legend-title">Jaringan jalan</div>${items}`;
+  const garis = (label, warna) => `<div class="legend-item"><span class="legend-line" style="background:${warna}"></span>${esc(label)}</div>`;
+  const putus = (label, warna, border) => `<div class="legend-item"><span class="legend-dash" style="border-color:${warna}${border ? ';outline:0' : ''}"></span>${esc(label)}</div>`;
+  const area = (label, warna, isi) => `<div class="legend-item"><span class="legend-box" style="border-color:${warna};background:${isi}"></span>${esc(label)}</div>`;
+
+  const batas =
+    area('Batas kabupaten', '#f4e342', '#f4e34233') +
+    putus('Batas kecamatan', '#ff8c42') +
+    putus('Batas desa/kelurahan', '#95a5a6') +
+    garis('Garis pantai', '#00e5ff').replace('legend-line', 'legend-dash').replace(`background:#00e5ff`, 'border-color:#00e5ff;background:none');
+
+  const lahan =
+    area('Permukiman', '#8e44ad', '#8e44ad66') +
+    area('Bangunan', '#3949ab', '#3949ab80');
+
+  const jalan = Object.keys(roadColor).sort().map(k => garis(k, roadColor[k])).join('');
+
+  const fasilitas = Object.entries(CATS).filter(([k]) => k !== 'Lainnya').map(([k, c]) =>
+    `<div class="legend-item"><span class="legend-dot ${c.cls}"><i class="fa-solid ${c.icon}"></i></span>${esc(k)}</div>`).join('');
+
+  legendDiv.innerHTML =
+    `<div class="legend-title">Legenda</div>` +
+    `<div class="legend-section">Batas wilayah</div>${batas}` +
+    `<div class="legend-section">Permukiman &amp; bangunan</div>${lahan}` +
+    (jalan ? `<div class="legend-section">Jaringan jalan</div>${jalan}` : '') +
+    `<div class="legend-section">Fasilitas</div>${fasilitas}`;
   legend.addTo(map);
 }
 function addRoads(fc, file) {
@@ -306,7 +336,6 @@ const namaManual = WISATA_MANUAL.map(w => norm(w[0]));
 const sudahManual = nama => { const n = norm(nama); return namaManual.some(m => n.includes(m) || m.includes(n)); };
 const Q = '(-6.2,123.3,-5.15,124.7)';
 const OVERPASS_QUERY = `[out:json][timeout:60];(
- nwr["place"~"^(village|hamlet|suburb|neighbourhood|town|quarter)$"]${Q};
  nwr["amenity"~"^(school|college|university|kindergarten|hospital|clinic|doctors|townhall|police|courthouse)$"]${Q};
  nwr["healthcare"]${Q}; nwr["office"="government"]${Q};
  nwr["tourism"~"^(attraction|viewpoint|museum|resort|hotel|guest_house)$"]${Q};
@@ -326,7 +355,6 @@ async function loadOSM() {
         else if (/^(hospital|clinic|doctors)$/.test(t.amenity || '') || t.healthcare) category = 'Kesehatan';
         else if (/^(townhall|police|courthouse)$/.test(t.amenity || '') || t.office === 'government') category = 'Pemerintahan';
         else if (t.tourism || t.historic || t.natural || t.sport) category = 'Pariwisata';
-        else if (t.place) category = 'Permukiman';
         if (!category) return;
         const lat = e.lat ?? e.center?.lat, lon = e.lon ?? e.center?.lon;
         if (lat == null || lon == null) return;
@@ -347,6 +375,7 @@ async function loadOSM() {
   for (const f of FILES) { if (await muatFile(f)) ok++; else gagal.push(f.file); }
   WISATA_MANUAL.forEach(([nama, lat, lon]) => addPoint({ name: nama, category: 'Pariwisata', lat, lon, source: 'Data wisata (koordinat diperbarui)' }));
   updateRecap(); applyPointFilters();
+  renderLegend();
   map.fitBounds(ALL_BOUNDS);
   setStatus(gagal.length ? `Layer gagal dimuat: ${gagal.join(', ')}` : `${ok} layer dimuat. Memuat fasilitas OSM...`, gagal.length > 0);
   const osmOk = await loadOSM();
