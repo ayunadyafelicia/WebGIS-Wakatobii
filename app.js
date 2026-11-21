@@ -1,8 +1,8 @@
-
 const GAYA = {
   kabupaten: {
     color: '#f4e342',
     weight: 3,
+    opacity: 1,
     fillColor: '#f4e342',
     fillOpacity: 0.1
   },
@@ -10,13 +10,14 @@ const GAYA = {
   kecamatan: {
     color: '#ff8c42',
     weight: 2.5,
+    opacity: 1,
     dashArray: '8 6',
     fillColor: '#ff8c42',
     fillOpacity: 0.06
   },
 
   desa: {
-    color: '#263238',
+    color: '#ffffff',
     weight: 2.5,
     opacity: 1,
     dashArray: '5 4',
@@ -27,6 +28,7 @@ const GAYA = {
   permukiman: {
     color: '#8e44ad',
     weight: 1,
+    opacity: 1,
     fillColor: '#8e44ad',
     fillOpacity: 0.4
   },
@@ -34,6 +36,7 @@ const GAYA = {
   pantai: {
     color: '#00e5ff',
     weight: 3,
+    opacity: 1,
     dashArray: '8 6'
   }
 };
