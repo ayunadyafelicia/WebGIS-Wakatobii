@@ -1,22 +1,34 @@
-// WebGIS Kabupaten Wakatobi: memuat GeoJSON lokal + titik wisata + fasilitas OSM
+// WebGIS Kabupaten Wakatobi: GeoJSON lokal + titik wisata + fasilitas OSM
 const $ = id => document.getElementById(id);
-const log = msg => { const el = $('log'); el.textContent += msg + '\n'; el.scrollTop = el.scrollHeight; };
+const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
+const setHTML = (id, html) => { const el = $(id); if (el) el.innerHTML = html; };
+function setStatus(text, error) {
+  const el = $('statusData');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.toggle('error', !!error);
+}
 
-/* ===== PETA ===== */
-const map = L.map('map', { preferCanvas: true }).setView([-5.55, 123.75], 9);
-const imagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Esri, Maxar' }).addTo(map);
-const osmTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
+/* ===== PETA & BASEMAP (bisa di-zoom sedetail mungkin) ===== */
+const map = L.map('map', { preferCanvas: true, maxZoom: 22 }).setView([-5.55, 123.75], 9);
+const imagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 22, maxNativeZoom: 17, attribution: 'Esri, Maxar'   // jika masih muncul "Map data not yet available", turunkan ke 16
+}).addTo(map);
+const osmTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 22, maxNativeZoom: 19, attribution: '&copy; OpenStreetMap'
+});
+L.control.layers({ 'Citra Satelit': imagery, 'OpenStreetMap': osmTiles }).addTo(map);
+L.control.scale({ imperial: false }).addTo(map);
 
-const URUTAN = ['kabupaten', 'kecamatan', 'desa', 'permukiman', 'pantai', 'jalan'];
+const URUTAN = ['kabupaten', 'kecamatan', 'desa', 'permukiman', 'pantai', 'jalan', 'bangunan'];
 URUTAN.forEach((n, i) => { map.createPane('p-' + n).style.zIndex = 401 + i; });
 const G = {};
 URUTAN.concat(['titik']).forEach(n => { G[n] = L.layerGroup().addTo(map); });
 
-L.control.layers({ 'Citra Esri': imagery, 'OpenStreetMap': osmTiles }, {
-  'Batas kabupaten': G.kabupaten, 'Batas kecamatan': G.kecamatan, 'Batas desa/kelurahan': G.desa,
-  'Permukiman': G.permukiman, 'Garis pantai': G.pantai, 'Jaringan jalan': G.jalan, 'Titik fasilitas': G.titik
-}).addTo(map);
-L.control.scale({ imperial: false }).addTo(map);
+document.querySelectorAll('input[data-layer]').forEach(cb => cb.addEventListener('change', () => {
+  const g = G[cb.dataset.layer];
+  if (g) cb.checked ? g.addTo(map) : map.removeLayer(g);
+}));
 
 /* ===== KONFIGURASI ===== */
 const FILES = [
@@ -63,7 +75,7 @@ const WISATA_MANUAL = [
   ['Goa Air Kontamale', -5.318097, 123.534756]
 ];
 
-let points = [], markerRefs = [], roadFeatures = [], currentCategory = 'ALL';
+let points = [], markerRefs = [], currentCategory = 'ALL';
 
 /* ===== UTIL ===== */
 const esc = v => String(v ?? '-').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -74,6 +86,7 @@ function firstProp(p, keys) {
   return '';
 }
 const NAMA_KEYS = ['NAMOBJ', 'NAMA', 'nama', 'NAME', 'name', 'namobj'];
+const dataRows = (p, n = 12) => Object.entries(p || {}).filter(([, v]) => v !== null && v !== '' && typeof v !== 'object').slice(0, n);
 function islandFrom(lat, lon) {
   if (lat > -5.48 && lon < 123.68) return 'Wangi-Wangi';
   if (lat > -5.58 && lon >= 123.65 && lon < 123.87) return 'Kaledupa';
@@ -96,8 +109,8 @@ function markerIcon(category) {
 }
 function detail(title, category, rows) {
   const c = CATS[category] || { cls: 'bg-lainnya' };
-  $('hasil').innerHTML = `<div class="detail-title">${esc(title)}</div><span class="detail-category ${c.cls}">${esc(category)}</span><hr style="margin:6px 0">` +
-    rows.map(([k, v]) => `<div class="detail-info-row"><b>${esc(k)}:</b> ${esc(v)}</div>`).join('');
+  setHTML('hasil', `<div class="detail-title">${esc(title)}</div><span class="detail-category ${c.cls}">${esc(category)}</span><hr style="margin:6px 0">` +
+    rows.map(([k, v]) => `<div class="detail-info-row"><b>${esc(k)}:</b> ${esc(v)}</div>`).join(''));
 }
 function featureCollection(v) {
   if (!v) return null;
@@ -112,6 +125,7 @@ function validWgs84(fc) {
   while (Array.isArray(c[0])) c = c[0];
   return Number.isFinite(c[0]) && Number.isFinite(c[1]) && Math.abs(c[0]) <= 180 && Math.abs(c[1]) <= 90;
 }
+const kunciProps = fc => Object.keys((fc.features.find(f => f.properties) || {}).properties || {});
 
 /* ===== TITIK FASILITAS ===== */
 function addPoint({ name, category, lat, lon, source, properties = {} }) {
@@ -123,7 +137,7 @@ function addPoint({ name, category, lat, lon, source, properties = {} }) {
   m.on('click', () => detail(d.name, d.category, [
     ['Pulau/area', d.island], ['Sumber data', d.source],
     ['Lintang', d.lat.toFixed(6)], ['Bujur', d.lon.toFixed(6)],
-    ...Object.entries(d.properties).filter(([, v]) => typeof v !== 'object').slice(0, 8)
+    ...dataRows(d.properties, 8)
   ]));
   m.featureData = d;
   points.push(d); markerRefs.push(m); G.titik.addLayer(m);
@@ -131,14 +145,12 @@ function addPoint({ name, category, lat, lon, source, properties = {} }) {
 function updateRecap() {
   const counts = {};
   points.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1; });
-  $('rekap').innerHTML = '<table class="stat-table"><tr><th>Kategori</th><th class="num">Titik</th></tr>' +
-    Object.keys(CATS).filter(k => counts[k]).map(k => `<tr><td>${esc(k)}</td><td class="num">${counts[k]}</td></tr>`).join('') + '</table>';
+  setHTML('rekap', '<table class="stat-table"><tr><th>Kategori</th><th class="num">Titik</th></tr>' +
+    Object.keys(CATS).filter(k => counts[k]).map(k => `<tr><td>${esc(k)}</td><td class="num">${counts[k]}</td></tr>`).join('') + '</table>');
 }
 function applyPointFilters() {
-  const q = norm($('searchInput').value.trim());
   markerRefs.forEach(m => {
-    const d = m.featureData;
-    const visible = (currentCategory === 'ALL' || d.category === currentCategory) && norm(d.name).includes(q);
+    const visible = currentCategory === 'ALL' || m.featureData.category === currentCategory;
     if (visible) { if (!G.titik.hasLayer(m)) G.titik.addLayer(m); }
     else G.titik.removeLayer(m);
   });
@@ -147,10 +159,9 @@ document.querySelectorAll('.chip').forEach(btn => btn.addEventListener('click', 
   document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
   btn.classList.add('active'); currentCategory = btn.dataset.category; applyPointFilters();
 }));
-$('searchInput').addEventListener('input', applyPointFilters);
-$('pulauSel').addEventListener('change', e => map.fitBounds(e.target.value === 'ALL' ? ALL_BOUNDS : ISLAND_BOUNDS[e.target.value]));
+on('pulauSel', 'change', e => map.fitBounds(e.target.value === 'ALL' ? ALL_BOUNDS : ISLAND_BOUNDS[e.target.value]));
 
-/* ===== NAMA KECAMATAN (untuk tooltip layer kecamatan) ===== */
+/* ===== NAMA KECAMATAN (tooltip layer kecamatan) ===== */
 function getKecamatanName(p) {
   const n = firstProp(p, ['NAMOBJ', 'WADMKC', 'NAMKEC', 'NAMAKEC', 'NAMA_KEC', 'KECAMATAN', 'NAME_2', 'NAMA', 'NAME', 'name']);
   if (n) return String(n).trim();
@@ -158,58 +169,82 @@ function getKecamatanName(p) {
   return s ? s.trim() : '';
 }
 
-/* ===== JALAN ===== */
-const roadStyle = {
-  'Jalan arteri': '#c0392b', 'Jalan kolektor': '#e67e22', 'Jalan lokal': '#f1c40f',
-  'Jalan lingkungan': '#27ae60', 'Jalan setapak': '#8e44ad', 'Jalan lainnya': '#ff3b30'
-};
-function roadKind(p) {
-  const raw = norm(firstProp(p, ['REMARK', 'KELAS', 'KLASIFIKASI', 'JENJANG', 'FUNGSI', 'FCODE', 'JENIS', 'NAMOBJ']));
-  if (/arteri|primary|trunk/.test(raw)) return 'Jalan arteri';
-  if (/kolektor|secondary/.test(raw)) return 'Jalan kolektor';
-  if (/lokal|tertiary/.test(raw)) return 'Jalan lokal';
-  if (/lingkungan|residential|unclassified/.test(raw)) return 'Jalan lingkungan';
-  if (/setapak|footway|path|track|steps/.test(raw)) return 'Jalan setapak';
-  return 'Jalan lainnya';
+/* ===== JALAN: kelas, warna, dan legenda diambil dari data ===== */
+const KELAS_WARNA = [['arteri', '#c0392b'], ['nasional', '#c0392b'], ['kolektor', '#e67e22'], ['provinsi', '#e67e22'], ['lokal', '#f1c40f'], ['kabupaten', '#f1c40f'], ['lingkungan', '#27ae60'], ['desa', '#27ae60'], ['setapak', '#8e44ad']];
+const PALET = ['#16a085', '#2980b9', '#d35400', '#c0392b', '#8e44ad', '#f39c12', '#27ae60', '#7f8c8d', '#e84393', '#00acc1'];
+const roadColor = {};
+let roadField = null;
+function pilihKolomKelas(fc) {
+  const keys = kunciProps(fc);
+  const sample = fc.features.slice(0, 3000);
+  const distinct = k => { const s = new Set(); sample.forEach(f => { const v = f.properties && f.properties[k]; if (v !== null && v !== undefined && String(v).trim() !== '') s.add(String(v).trim()); }); return s.size; };
+  const prior = ['REMARK', 'KELAS', 'KLASIFIKASI', 'JENJANG', 'FUNGSI', 'JENIS', 'KATEGORI', 'TIPE', 'TYPE', 'STATUS', 'HIERARKI', 'FCODE'];
+  for (const k of prior) { const r = keys.find(x => x.toUpperCase() === k); if (r) { const n = distinct(r); if (n >= 2 && n <= 25) return r; } }
+  for (const k of keys) {
+    if (/^(NAMOBJ|NAMA|NAME|OBJECTID|FID|ID|UID|SHAPE)/i.test(k)) continue;
+    const n = distinct(k); if (n >= 2 && n <= 12) return k;
+  }
+  return null;
+}
+function kelasJalan(p) {
+  const v = roadField && p ? p[roadField] : null;
+  return (v === null || v === undefined || String(v).trim() === '') ? 'Tidak diklasifikasikan' : String(v).trim();
+}
+function warnaKelas(k) {
+  if (roadColor[k]) return roadColor[k];
+  const n = norm(k), m = KELAS_WARNA.find(([w]) => n.includes(w));
+  roadColor[k] = m ? m[1] : PALET[Object.keys(roadColor).length % PALET.length];
+  return roadColor[k];
+}
+const legendDiv = L.DomUtil.create('div', 'legend');
+const legend = L.control({ position: 'bottomright' });
+legend.onAdd = () => legendDiv;
+function renderLegend() {
+  const items = Object.keys(roadColor).sort().map(k =>
+    `<div class="legend-item"><span class="legend-line" style="background:${roadColor[k]}"></span>${esc(k)}</div>`).join('');
+  legendDiv.innerHTML = `<div class="legend-title">Jaringan jalan</div>${items}`;
+  legend.addTo(map);
 }
 function addRoads(fc, file) {
+  roadField = pilihKolomKelas(fc);
+  console.log('Kelas jalan dari kolom:', roadField, '| kolom tersedia:', kunciProps(fc).join(', '));
   const stats = {}; let total = 0;
   L.geoJSON(fc, {
     pane: 'p-jalan',
-    style: f => ({ color: roadStyle[roadKind(f.properties || {})], weight: 3, opacity: 0.95 }),
+    style: f => ({ color: warnaKelas(kelasJalan(f.properties)), weight: 3, opacity: 0.95 }),
     onEachFeature: (f, layer) => {
-      const p = f.properties || {}, kind = roadKind(p);
+      const p = f.properties || {}, kind = kelasJalan(p);
       let km = 0; try { km = turf.length(f, { units: 'kilometers' }); } catch (e) { /* abaikan */ }
       stats[kind] = (stats[kind] || 0) + km; total += km;
-      roadFeatures.push({ layer, kind });
       const nm = firstProp(p, NAMA_KEYS);
-      layer.on('click', () => detail(nm || kind, kind, [
-        ['Panjang', km.toFixed(3) + ' km'], ['Layer', file],
-        ...Object.entries(p).filter(([, v]) => typeof v !== 'object').slice(0, 12)
-      ]));
+      layer.on('click', () => detail(nm || kind, kind, [['Kelas jalan', kind], ['Panjang', km.toFixed(3) + ' km'], ['Layer', file], ...dataRows(p)]));
       if (nm) layer.bindTooltip(esc(nm), { sticky: true });
     }
   }).addTo(G.jalan);
-  return { stats, total };
-}
-function showRoadStats(stats, total) {
   const rows = Object.entries(stats).sort((a, b) => b[1] - a[1]);
-  $('statistikContainer').innerHTML = '<table class="stat-table"><tr><th>Jenis/kelas jalan</th><th class="num">km</th></tr>' +
-    rows.map(([k, v]) => `<tr><td><i style="background:${roadStyle[k]};display:inline-block;width:13px;height:4px;margin-right:5px"></i>${esc(k)}</td><td class="num">${v.toFixed(2)}</td></tr>`).join('') +
-    `<tr><th>Total panjang</th><th class="num">${total.toFixed(2)}</th></tr></table>`;
-  const sel = $('filterJalan'); sel.innerHTML = '<option value="ALL">Semua jenis jalan</option>';
-  rows.forEach(([k]) => sel.add(new Option(k, k)));
+  setHTML('statistikContainer', '<table class="stat-table"><tr><th>Jenis/kelas jalan</th><th class="num">km</th></tr>' +
+    rows.map(([k, v]) => `<tr><td><i style="background:${warnaKelas(k)};display:inline-block;width:13px;height:4px;margin-right:5px"></i>${esc(k)}</td><td class="num">${v.toFixed(2)}</td></tr>`).join('') +
+    `<tr><th>Total panjang</th><th class="num">${total.toFixed(2)}</th></tr></table>`);
+  renderLegend();
 }
-$('filterJalan').addEventListener('change', e => {
-  roadFeatures.forEach(({ layer, kind }) => {
-    const show = e.target.value === 'ALL' || kind === e.target.value;
-    layer.setStyle({ opacity: show ? 0.95 : 0.06, weight: show ? 3 : 1 });
-  });
-});
 
-/* ===== PROSES TIAP FILE GEOJSON ===== */
-function titikDariLayer(tipe, fc, file) {
-  let added = 0, dilewati = 0;
+/* ===== BANGUNAN (titik/area merah muda) ===== */
+function tampilBangunan(fc, file) {
+  L.geoJSON(fc, {
+    pane: 'p-bangunan',
+    style: () => ({ color: '#e84393', weight: 1, fillColor: '#e84393', fillOpacity: 0.5 }),
+    pointToLayer: (f, ll) => L.circleMarker(ll, { pane: 'p-bangunan', radius: 4, color: '#ffffff', weight: 1, fillColor: '#e84393', fillOpacity: 0.9 }),
+    onEachFeature: (f, l) => {
+      const p = f.properties || {}, nm = firstProp(p, NAMA_KEYS);
+      if (nm) l.bindTooltip(esc(nm), { sticky: true });
+      l.on('click', () => detail(nm || 'Bangunan', 'Lainnya', [['Layer', file], ...dataRows(p)]));
+    }
+  }).addTo(G.bangunan);
+}
+
+/* ===== PEMERINTAHAN (jadi titik fasilitas) ===== */
+function titikPemerintahan(fc, file) {
+  let added = 0;
   fc.features.forEach(f => {
     if (!f.geometry) return;
     const p = f.properties || {};
@@ -219,17 +254,17 @@ function titikDariLayer(tipe, fc, file) {
     else if (g.type === 'MultiPoint') coord = g.coordinates[0];
     else { try { coord = turf.pointOnFeature(f).geometry.coordinates; } catch (e) { /* abaikan */ } }
     if (!coord || coord.length < 2) return;
-    const category = tipe === 'pemerintahan' ? 'Pemerintahan' : classifyText(propsText(p));
-    if (!category) { dilewati++; return; }
-    const nm = firstProp(p, NAMA_KEYS) || `${category} ${added + 1}`;
-    addPoint({ name: String(nm), category, lat: Number(coord[1]), lon: Number(coord[0]), source: file, properties: p });
+    const nm = firstProp(p, NAMA_KEYS) || `Pemerintahan ${added + 1}`;
+    addPoint({ name: String(nm), category: 'Pemerintahan', lat: Number(coord[1]), lon: Number(coord[0]), source: file, properties: p });
     added++;
   });
-  log(`  ${added} titik dari ${file}` + (dilewati ? ` (${dilewati} bangunan tanpa kategori dilewati)` : ''));
 }
+
+/* ===== PROSES TIAP FILE ===== */
 function prosesLayer(tipe, fc, file) {
-  if (tipe === 'jalan') { const r = addRoads(fc, file); showRoadStats(r.stats, r.total); return; }
-  if (tipe === 'bangunan' || tipe === 'pemerintahan') { titikDariLayer(tipe, fc, file); return; }
+  if (tipe === 'jalan') { addRoads(fc, file); return; }
+  if (tipe === 'bangunan') { tampilBangunan(fc, file); return; }
+  if (tipe === 'pemerintahan') { titikPemerintahan(fc, file); return; }
   L.geoJSON(fc, {
     pane: 'p-' + tipe,
     style: () => GAYA[tipe],
@@ -237,7 +272,7 @@ function prosesLayer(tipe, fc, file) {
       const p = f.properties || {};
       const nm = tipe === 'kecamatan' ? getKecamatanName(p) : firstProp(p, NAMA_KEYS.concat(['WADMKD', 'NAMDESA']));
       if (nm) l.bindTooltip(esc(nm), { sticky: true });
-      l.on('click', () => detail(nm || file, 'Area', Object.entries(p).filter(([, v]) => typeof v !== 'object').slice(0, 12)));
+      l.on('click', () => detail(nm || file, 'Lainnya', dataRows(p)));
     }
   }).addTo(G[tipe]);
 }
@@ -247,19 +282,15 @@ async function muatFile({ file, tipe }) {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const fc = featureCollection(await res.json());
     if (!fc || !fc.features.length) throw new Error('tidak berisi fitur');
-    if (!validWgs84(fc)) throw new Error('koordinat bukan lon/lat (WGS84), ekspor ulang dengan EPSG:4326');
-    log(`${file}: ${fc.features.length} fitur`);
+    if (!validWgs84(fc)) throw new Error('koordinat bukan lon/lat (WGS84)');
     prosesLayer(tipe, fc, file);
     return true;
-  } catch (err) { log(`${file} GAGAL: ${err.message}`); return false; }
+  } catch (err) { console.warn(file + ' gagal:', err); return false; }
 }
 
 /* ===== WISATA MANUAL + OSM ===== */
 const namaManual = WISATA_MANUAL.map(w => norm(w[0]));
 const sudahManual = nama => { const n = norm(nama); return namaManual.some(m => n.includes(m) || m.includes(n)); };
-function tambahWisataManual() {
-  WISATA_MANUAL.forEach(([nama, lat, lon]) => addPoint({ name: nama, category: 'Pariwisata', lat, lon, source: 'Data wisata (koordinat diperbarui)' }));
-}
 const Q = '(-6.2,123.3,-5.15,124.7)';
 const OVERPASS_QUERY = `[out:json][timeout:60];(
  nwr["place"~"^(village|hamlet|suburb|neighbourhood|town|quarter)$"]${Q};
@@ -272,11 +303,9 @@ async function loadOSM() {
   const mirrors = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
   for (const url of mirrors) {
     try {
-      log('Mengambil fasilitas OSM dari ' + new URL(url).host);
       const res = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(OVERPASS_QUERY) });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-      let count = 0;
       data.elements.forEach(e => {
         const t = e.tags || {};
         let category = null;
@@ -291,39 +320,23 @@ async function loadOSM() {
         const nm = t.name || t['name:id'] || `${category} (tanpa nama)`;
         if (category === 'Pariwisata' && sudahManual(nm)) return; // pakai koordinat manual
         addPoint({ name: nm, category, lat: Number(lat), lon: Number(lon), source: 'OpenStreetMap', properties: t });
-        count++;
       });
-      log(`${count} titik OSM diproses.`);
-      return count;
-    } catch (err) { log(`OSM ${new URL(url).host} gagal: ${err.message}`); }
+      return true;
+    } catch (err) { console.warn('OSM gagal:', url, err); }
   }
-  log('Data OSM tidak termuat. Layer GeoJSON tetap digunakan.');
-  return 0;
+  return false;
 }
-
-/* ===== LEGENDA JALAN ===== */
-const legend = L.control({ position: 'bottomright' });
-legend.onAdd = () => {
-  const d = L.DomUtil.create('div', 'legend');
-  d.innerHTML = '<div class="legend-title">Jaringan jalan</div>' +
-    Object.entries(roadStyle).map(([k, c]) => `<div class="legend-item"><span class="legend-line" style="background:${c}"></span>${k}</div>`).join('');
-  return d;
-};
-legend.addTo(map);
 
 /* ===== INISIALISASI ===== */
 (async function init() {
-  $('statusData').textContent = 'Memuat data GeoJSON...';
-  let ok = 0;
-  for (const f of FILES) if (await muatFile(f)) ok++;
-  tambahWisataManual();
+  setStatus('Memuat data GeoJSON...');
+  let ok = 0; const gagal = [];
+  for (const f of FILES) { if (await muatFile(f)) ok++; else gagal.push(f.file); }
+  WISATA_MANUAL.forEach(([nama, lat, lon]) => addPoint({ name: nama, category: 'Pariwisata', lat, lon, source: 'Data wisata (koordinat diperbarui)' }));
   updateRecap(); applyPointFilters();
   map.fitBounds(ALL_BOUNDS);
-  $('statusData').textContent = ok === FILES.length
-    ? `${ok} layer GeoJSON berhasil dimuat. Memuat fasilitas OSM...`
-    : `${ok} dari ${FILES.length} layer berhasil. Lihat log di bawah.`;
-  if (ok < FILES.length) $('statusData').classList.add('error');
-  await loadOSM();
+  setStatus(gagal.length ? `Layer gagal dimuat: ${gagal.join(', ')}` : `${ok} layer dimuat. Memuat fasilitas OSM...`, gagal.length > 0);
+  const osmOk = await loadOSM();
   updateRecap(); applyPointFilters();
-  if (ok === FILES.length) $('statusData').textContent = `Selesai: ${ok} layer dan ${points.length} titik fasilitas dimuat.`;
-})();
+  if (!gagal.length) setStatus(osmOk ? `Selesai: ${ok} layer dan ${points.length} titik fasilitas dimuat.` : `${ok} layer dimuat. Data OSM tidak termuat.`, !osmOk);
+})().catch(err => setStatus('Kesalahan: ' + err.message, true));
