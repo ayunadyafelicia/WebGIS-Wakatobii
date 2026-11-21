@@ -9,13 +9,12 @@ function setStatus(text, error) {
   el.classList.toggle('error', !!error);
 }
 
-/* ===== PETA & BASEMAP (bisa di-zoom sedetail mungkin) ===== */
-// Semua lapisan vektor digambar di SATU canvas: ringan, dan semua area tetap bisa diklik
+/* ===== PETA & BASEMAP ===== */
 const kanvas = L.canvas({ padding: 0.5 });
 L.Path.mergeOptions({ renderer: kanvas });
 const map = L.map('map', { preferCanvas: true, maxZoom: 22 }).setView([-5.55, 123.75], 9);
 const imagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-  maxZoom: 22, maxNativeZoom: 17, attribution: 'Esri, Maxar'   // jika masih muncul "Map data not yet available", turunkan ke 16
+  maxZoom: 22, maxNativeZoom: 17, attribution: 'Esri, Maxar'
 }).addTo(map);
 const osmTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 22, maxNativeZoom: 19, attribution: '&copy; OpenStreetMap'
@@ -28,12 +27,10 @@ URUTAN.forEach((n, i) => { map.createPane('p-' + n).style.zIndex = 401 + i; });
 const G = {};
 URUTAN.concat(['titik']).forEach(n => { G[n] = L.layerGroup().addTo(map); });
 
-// Kotak centang jaringan
 document.querySelectorAll('input[data-layer]').forEach(cb => cb.addEventListener('change', () => {
   const g = G[cb.dataset.layer];
   if (g) cb.checked ? g.addTo(map) : map.removeLayer(g);
 }));
-// Tombol fasilitas yang berupa lapisan area (Permukiman, Bangunan)
 document.querySelectorAll('.chip[data-layer]').forEach(btn => btn.addEventListener('click', () => {
   const g = G[btn.dataset.layer];
   if (!g) return;
@@ -76,7 +73,6 @@ const ISLAND_BOUNDS = {
 };
 const ALL_BOUNDS = [[-6.2, 123.3], [-5.15, 124.7]];
 
-// Koordinat wisata yang sudah diperbaiki
 const WISATA_MANUAL = [
   ['Liya Togo', -5.373675, 123.628725],
   ['Mola Village', -5.343792, 123.540861],
@@ -176,7 +172,7 @@ document.querySelectorAll('.chip[data-category]').forEach(btn => btn.addEventLis
 }));
 on('pulauSel', 'change', e => map.fitBounds(e.target.value === 'ALL' ? ALL_BOUNDS : ISLAND_BOUNDS[e.target.value]));
 
-/* ===== NAMA KECAMATAN (tooltip layer kecamatan) ===== */
+/* ===== NAMA KECAMATAN ===== */
 function getKecamatanName(p) {
   const n = firstProp(p, ['NAMOBJ', 'WADMKC', 'NAMKEC', 'NAMAKEC', 'NAMA_KEC', 'KECAMATAN', 'NAME_2', 'NAMA', 'NAME', 'name']);
   if (n) return String(n).trim();
@@ -184,7 +180,7 @@ function getKecamatanName(p) {
   return s ? s.trim() : '';
 }
 
-/* ===== JALAN: kelas, warna, dan legenda diambil dari data ===== */
+/* ===== JALAN ===== */
 const KELAS_WARNA = [['arteri', '#c0392b'], ['nasional', '#c0392b'], ['kolektor', '#e67e22'], ['provinsi', '#e67e22'], ['lokal', '#f1c40f'], ['kabupaten', '#f1c40f'], ['lingkungan', '#27ae60'], ['desa', '#27ae60'], ['setapak', '#8e44ad']];
 const PALET = ['#16a085', '#2980b9', '#d35400', '#c0392b', '#8e44ad', '#f39c12', '#27ae60', '#7f8c8d', '#e84393', '#00acc1'];
 const roadColor = {};
@@ -212,15 +208,15 @@ function warnaKelas(k) {
   return roadColor[k];
 }
 
-/* ===== LEGENDA LENGKAP (simbol sama persis dengan di peta) ===== */
+/* ===== LEGENDA ===== */
 const legendDiv = L.DomUtil.create('div', 'legend');
 const legend = L.control({ position: 'bottomright' });
 legend.onAdd = () => legendDiv;
+let legendAdded = false;
 function renderLegend() {
   const svg = inner => `<svg width="30" height="16" viewBox="0 0 30 16">${inner}</svg>`;
   const baris = (sym, label) => `<div class="legend-row"><span class="legend-sym">${sym}</span><span>${esc(label)}</span></div>`;
   const seksi = t => `<div class="legend-section">${t}</div>`;
-
   const garis = w => svg(`<line x1="2" y1="8" x2="28" y2="8" stroke="${w}" stroke-width="3" stroke-linecap="round"/>`);
   const putus = (w, tebal) => svg(`<line x1="1" y1="8" x2="29" y2="8" stroke="${w}" stroke-width="${tebal}" stroke-dasharray="6 4"/>`);
   const kabSym = svg(`<rect x="2" y="2" width="26" height="12" fill="#f4e342" fill-opacity="0.25" stroke="#f4e342" stroke-width="3"/>`);
@@ -233,13 +229,10 @@ function renderLegend() {
     baris(putus('#ff8c42', 2.5), 'Batas kecamatan') +
     baris(desaSym, 'Batas desa/kelurahan') +
     baris(putus('#00e5ff', 3), 'Garis pantai');
-
   const lahan =
     baris(permSym, 'Permukiman') +
     baris(marker('marker-bangunan', 'fa-building'), 'Bangunan');
-
   const jalan = Object.keys(roadColor).sort().map(k => baris(garis(roadColor[k]), k)).join('');
-
   const fasilitas = ['Pariwisata', 'Pendidikan', 'Kesehatan', 'Pemerintahan'].map(k =>
     baris(marker(CATS[k].cls, CATS[k].icon), k)).join('');
 
@@ -249,7 +242,7 @@ function renderLegend() {
     seksi('Permukiman &amp; bangunan') + lahan +
     (jalan ? seksi('Jaringan jalan') + jalan : '') +
     seksi('Fasilitas') + fasilitas;
-  legend.addTo(map);
+  if (!legendAdded) { legend.addTo(map); legendAdded = true; }
 }
 function addRoads(fc, file) {
   roadField = pilihKolomKelas(fc);
@@ -274,7 +267,7 @@ function addRoads(fc, file) {
   renderLegend();
 }
 
-/* ===== PERMUKIMAN (area, dengan keterangan saat diklik) ===== */
+/* ===== PERMUKIMAN ===== */
 function tampilPermukiman(fc, file) {
   L.geoJSON(fc, {
     pane: 'p-permukiman',
@@ -297,7 +290,7 @@ function tampilPermukiman(fc, file) {
   }).addTo(G.permukiman);
 }
 
-/* ===== BANGUNAN (simbol gedung + keterangan seperti fasilitas lain) ===== */
+/* ===== BANGUNAN ===== */
 const iconBangunan = L.divIcon({
   className: '',
   html: '<div class="custom-marker marker-bangunan"><i class="fa-solid fa-building"></i></div>',
@@ -325,7 +318,7 @@ function tampilBangunan(fc, file) {
   }).addTo(G.bangunan);
 }
 
-/* ===== PEMERINTAHAN (judul dan keterangan dari kolom REMARK) ===== */
+/* ===== PEMERINTAHAN ===== */
 function titikPemerintahan(fc, file) {
   fc.features.forEach(f => {
     if (!f.geometry) return;
@@ -365,7 +358,7 @@ function prosesLayer(tipe, fc, file) {
 }
 async function muatFile({ file, tipe }) {
   try {
-    const res = await fetch(encodeURI(file));
+    const res = await fetch(encodeURI(file) + '?t=' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const fc = featureCollection(await res.json());
     if (!fc || !fc.features.length) throw new Error('tidak berisi fitur');
@@ -403,7 +396,7 @@ async function loadOSM() {
         const lat = e.lat ?? e.center?.lat, lon = e.lon ?? e.center?.lon;
         if (lat == null || lon == null) return;
         const nm = t.name || t['name:id'] || `${category} (tanpa nama)`;
-        if (category === 'Pariwisata' && sudahManual(nm)) return; // pakai koordinat manual
+        if (category === 'Pariwisata' && sudahManual(nm)) return;
         addPoint({ name: nm, category, lat: Number(lat), lon: Number(lon), source: 'OpenStreetMap', properties: t });
       });
       return true;
@@ -414,14 +407,21 @@ async function loadOSM() {
 
 /* ===== INISIALISASI ===== */
 (async function init() {
-  setStatus('Memuat data GeoJSON...');
+  if (location.protocol === 'file:') {
+    setStatus('Halaman dibuka lewat file://, sehingga file GeoJSON diblokir browser. Jalankan lewat server lokal (mis. "python -m http.server" di folder ini, lalu buka http://localhost:8000).', true);
+  } else {
+    setStatus('Memuat data GeoJSON...');
+  }
+  renderLegend();
   let ok = 0; const gagal = [];
   for (const f of FILES) { if (await muatFile(f)) ok++; else gagal.push(f.file); }
   WISATA_MANUAL.forEach(([nama, lat, lon]) => addPoint({ name: nama, category: 'Pariwisata', lat, lon, source: 'Data wisata (koordinat diperbarui)' }));
   updateRecap(); applyPointFilters();
   renderLegend();
   map.fitBounds(ALL_BOUNDS);
-  setStatus(gagal.length ? `Layer gagal dimuat: ${gagal.join(', ')}` : `${ok} layer dimuat. Memuat fasilitas OSM...`, gagal.length > 0);
+  if (location.protocol !== 'file:') {
+    setStatus(gagal.length ? `Layer gagal dimuat: ${gagal.join(', ')} (cek nama & lokasi file, harus satu folder dengan index.html)` : `${ok} layer dimuat. Memuat fasilitas OSM...`, gagal.length > 0);
+  }
   const osmOk = await loadOSM();
   updateRecap(); applyPointFilters();
   if (!gagal.length) setStatus(osmOk ? `Selesai: ${ok} layer dan ${points.length} titik fasilitas dimuat.` : `${ok} layer dimuat. Data OSM tidak termuat.`, !osmOk);
