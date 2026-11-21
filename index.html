@@ -6,13 +6,16 @@
   <title>WebGIS Kabupaten Wakatobi</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;700&display=swap">
 <style>
-:root { --header-h: calc(100vw * 160 / 2048); }
+:root {
+  --header-h: calc(100vw * 160 / 2048);
+  --font: 'Arial Narrow', 'Archivo Narrow', 'Liberation Sans Narrow', 'Roboto Condensed', Arial, sans-serif;
+}
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: Calibri, Carlito, 'Segoe UI', sans-serif; }
-html, body { width: 100%; height: 100%; overflow: hidden; font-family: Calibri, Carlito, 'Segoe UI', sans-serif; background: #f4f6f7; }
-button, select, input, textarea, .leaflet-container, .leaflet-tooltip, .leaflet-control, .leaflet-popup, .legend { font-family: Calibri, Carlito, 'Segoe UI', sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
+html, body { width: 100%; height: 100%; overflow: hidden; font-family: var(--font); background: #f4f6f7; }
+button, select, input, textarea, .leaflet-container, .leaflet-tooltip, .leaflet-control, .leaflet-popup, .legend { font-family: var(--font); }
 
 header { position: absolute; top: 0; left: 0; right: 0; height: var(--header-h); background: #0e6251; padding: 0; box-shadow: 0 2px 10px #0004; z-index: 1000; overflow: hidden; }
 header img { display: block; width: 100%; height: 100%; object-fit: fill; }
@@ -52,7 +55,15 @@ hr { margin: 14px 0; border: 0; border-top: 1px solid #eaeded; }
 .stat-table td.num, .stat-table th.num { text-align: right; }
 
 .custom-marker { display: flex; justify-content: center; align-items: center; width: 30px; height: 30px; border-radius: 50%; color: #fff; box-shadow: 0 3px 8px #0008; border: 2px solid #fff; }
-.bg-pariwisata { background: #e67e22; }
+/* jenis wisata */
+.bg-w-pantai { background: #e67e22; }
+.bg-w-bahari { background: #0097a7; }
+.bg-w-sejarah { background: #8d6e63; }
+.bg-w-alam { background: #2e7d32; }
+.bg-w-desa { background: #9e9d24; }
+.bg-w-inap { background: #d81b60; }
+.bg-w-lain { background: #607d8b; }
+/* fasilitas lain */
 .bg-pendidikan { background: #2980b9; }
 .bg-kesehatan { background: #e74c3c; }
 .bg-pemerintahan { background: #8e44ad; }
@@ -74,6 +85,16 @@ hr { margin: 14px 0; border: 0; border-top: 1px solid #eaeded; }
 @media (max-width: 700px) {
   #panel { width: 290px; }
   #map { left: 290px; }
+}
+
+/* PAKSA FONT (Arial Narrow / Archivo Narrow), kecuali ikon Font Awesome */
+html, body, button, select, option, input, textarea, label, p, span, div, td, th, b, h4,
+.leaflet-container, .leaflet-container *, .leaflet-tooltip, .leaflet-control, .leaflet-control *,
+.legend, .legend *, .detail-card, .detail-card *, .stat-table, .stat-table * {
+  font-family: var(--font) !important;
+}
+.fa-solid, .fas, .fa-regular, .far {
+  font-family: 'Font Awesome 6 Free' !important;
 }
 </style>
 </head>
@@ -100,7 +121,13 @@ hr { margin: 14px 0; border: 0; border-top: 1px solid #eaeded; }
   <label><i class="fa-solid fa-filter"></i> <b>Fasilitas:</b></label>
   <div class="chips-container">
     <button class="chip active" data-category="ALL">Semua</button>
-    <button class="chip" data-category="Pariwisata"><i class="fa-solid fa-umbrella-beach"></i> Pariwisata</button>
+    <button class="chip" data-category="Wisata Pantai"><i class="fa-solid fa-umbrella-beach"></i> Wisata Pantai</button>
+    <button class="chip" data-category="Wisata Bahari"><i class="fa-solid fa-fish"></i> Wisata Bahari</button>
+    <button class="chip" data-category="Wisata Sejarah/Budaya"><i class="fa-solid fa-landmark"></i> Wisata Sejarah/Budaya</button>
+    <button class="chip" data-category="Wisata Alam"><i class="fa-solid fa-mountain"></i> Wisata Alam</button>
+    <button class="chip" data-category="Desa Wisata"><i class="fa-solid fa-people-roof"></i> Desa Wisata</button>
+    <button class="chip" data-category="Penginapan"><i class="fa-solid fa-bed"></i> Penginapan</button>
+    <button class="chip" data-category="Wisata Lainnya"><i class="fa-solid fa-camera"></i> Wisata Lainnya</button>
     <button class="chip" data-category="Pendidikan"><i class="fa-solid fa-graduation-cap"></i> Pendidikan</button>
     <button class="chip" data-category="Kesehatan"><i class="fa-solid fa-hospital"></i> Kesehatan</button>
     <button class="chip" data-category="Pemerintahan"><i class="fa-solid fa-building-columns"></i> Pemerintahan</button>
@@ -197,7 +224,13 @@ const GAYA = {
   pantai: { color: '#00e5ff', weight: 3, dashArray: '8 6' }
 };
 const CATS = {
-  Pariwisata: { cls: 'bg-pariwisata', icon: 'fa-umbrella-beach', warna: '#e67e22' },
+  'Wisata Pantai': { cls: 'bg-w-pantai', icon: 'fa-umbrella-beach', warna: '#e67e22' },
+  'Wisata Bahari': { cls: 'bg-w-bahari', icon: 'fa-fish', warna: '#0097a7' },
+  'Wisata Sejarah/Budaya': { cls: 'bg-w-sejarah', icon: 'fa-landmark', warna: '#8d6e63' },
+  'Wisata Alam': { cls: 'bg-w-alam', icon: 'fa-mountain', warna: '#2e7d32' },
+  'Desa Wisata': { cls: 'bg-w-desa', icon: 'fa-people-roof', warna: '#9e9d24' },
+  'Penginapan': { cls: 'bg-w-inap', icon: 'fa-bed', warna: '#d81b60' },
+  'Wisata Lainnya': { cls: 'bg-w-lain', icon: 'fa-camera', warna: '#607d8b' },
   Pendidikan: { cls: 'bg-pendidikan', icon: 'fa-graduation-cap', warna: '#2980b9' },
   Kesehatan: { cls: 'bg-kesehatan', icon: 'fa-hospital', warna: '#e74c3c' },
   Pemerintahan: { cls: 'bg-pemerintahan', icon: 'fa-building-columns', warna: '#8e44ad' },
@@ -205,6 +238,7 @@ const CATS = {
   Bangunan: { cls: 'bg-bangunan', icon: 'fa-building', warna: '#3949ab' },
   Lainnya: { cls: 'bg-lainnya', icon: 'fa-location-dot', warna: '#34495e' }
 };
+const WISATA_CATS = ['Wisata Pantai', 'Wisata Bahari', 'Wisata Sejarah/Budaya', 'Wisata Alam', 'Desa Wisata', 'Penginapan', 'Wisata Lainnya'];
 const ISLAND_BOUNDS = {
   'Wangi-Wangi': [[-5.48, 123.43], [-5.20, 123.65]],
   'Kaledupa': [[-5.55, 123.68], [-5.38, 123.83]],
@@ -213,14 +247,15 @@ const ISLAND_BOUNDS = {
 };
 const ALL_BOUNDS = [[-6.2, 123.3], [-5.15, 124.7]];
 
+// Koordinat wisata yang sudah diperbaiki: [nama, lintang, bujur, jenis wisata]
 const WISATA_MANUAL = [
-  ['Liya Togo', -5.373675, 123.628725],
-  ['Mola Village', -5.343792, 123.540861],
-  ['Waha Tourism Community', -5.251764, 123.526725],
-  ['Pantai Cemara', -5.261164, 123.520286],
-  ['Moli Sahatu Beach', -5.248033, 123.587],
-  ['Puncak Toliamba', -5.295711, 123.544767],
-  ['Goa Air Kontamale', -5.318097, 123.534756]
+  ['Liya Togo', -5.373675, 123.628725, 'Wisata Sejarah/Budaya'],
+  ['Mola Village', -5.343792, 123.540861, 'Desa Wisata'],
+  ['Waha Tourism Community', -5.251764, 123.526725, 'Desa Wisata'],
+  ['Pantai Cemara', -5.261164, 123.520286, 'Wisata Pantai'],
+  ['Moli Sahatu Beach', -5.248033, 123.587, 'Wisata Pantai'],
+  ['Puncak Toliamba', -5.295711, 123.544767, 'Wisata Alam'],
+  ['Goa Air Kontamale', -5.318097, 123.534756, 'Wisata Alam']
 ];
 
 let points = [], markerRefs = [];
@@ -244,6 +279,17 @@ function islandFrom(lat, lon) {
   if (lat > -5.80 && lon >= 123.85 && lon < 124.08) return 'Tomia';
   if (lat <= -5.80 && lon >= 123.88) return 'Binongko';
   return 'Pulau kecil/area lain';
+}
+// Tentukan jenis wisata dari tag OSM + nama (ubah kata kunci di sini bila perlu)
+function klasifikasiWisata(nama, t = {}) {
+  const n = norm(nama);
+  if (/desa wisata|kampung wisata|village|tourism community|komunitas wisata/.test(n)) return 'Desa Wisata';
+  if (/^(hotel|guest_house|hostel|motel|resort|apartment|chalet)$/.test(t.tourism || '') || /hotel|homestay|penginapan|losmen|resort|cottage|villa|bungalow|guest ?house/.test(n)) return 'Penginapan';
+  if (t.sport === 'scuba_diving' || /selam|diving|dive|snorkel|bahari|terumbu|reef|karang|dermaga wisata|marine/.test(n)) return 'Wisata Bahari';
+  if (t.natural === 'beach' || /pantai|beach|pasir putih|pesisir/.test(n)) return 'Wisata Pantai';
+  if (t.historic || t.tourism === 'museum' || /benteng|keraton|liya|makam|museum|masjid tua|baluwara|situs|budaya|kuno|bersejarah|sejarah|tugu/.test(n)) return 'Wisata Sejarah/Budaya';
+  if (t.natural === 'cave_entrance' || t.tourism === 'viewpoint' || /goa|gua|puncak|bukit|gunung|air terjun|danau|mangrove|hutan|view ?point|taman|telaga/.test(n)) return 'Wisata Alam';
+  return 'Wisata Lainnya';
 }
 function markerIcon(category) {
   const c = CATS[category] || CATS.Lainnya;
@@ -398,15 +444,16 @@ function renderLegend() {
     baris(permSym, 'Permukiman') +
     baris(marker('marker-bangunan', 'fa-building'), 'Bangunan');
   const jalan = Object.keys(roadColor).sort().map(k => baris(garisKelas(k), k)).join('');
-  const fasilitas = ['Pariwisata', 'Pendidikan', 'Kesehatan', 'Pemerintahan'].map(k =>
-    baris(marker(CATS[k].cls, CATS[k].icon), k)).join('');
+  const wisata = WISATA_CATS.map(k => baris(marker(CATS[k].cls, CATS[k].icon), k)).join('');
+  const umum = ['Pendidikan', 'Kesehatan', 'Pemerintahan'].map(k => baris(marker(CATS[k].cls, CATS[k].icon), k)).join('');
 
   legendDiv.innerHTML =
     `<div class="legend-title">Legenda</div>` +
     seksi('Batas wilayah') + batas +
     seksi('Permukiman &amp; bangunan') + lahan +
     (jalan ? seksi('Jaringan jalan') + jalan : '') +
-    seksi('Fasilitas') + fasilitas;
+    seksi('Jenis wisata') + wisata +
+    seksi('Fasilitas umum') + umum;
   if (!legendAdded) { legend.addTo(map); legendAdded = true; }
 }
 function addRoads(fc, file) {
@@ -573,16 +620,19 @@ async function loadOSM() {
       const data = await res.json();
       data.elements.forEach(e => {
         const t = e.tags || {};
-        let category = null;
+        let category = null, wisata = false;
         if (/^(school|college|university|kindergarten)$/.test(t.amenity || '')) category = 'Pendidikan';
         else if (/^(hospital|clinic|doctors)$/.test(t.amenity || '') || t.healthcare) category = 'Kesehatan';
         else if (/^(townhall|police|courthouse)$/.test(t.amenity || '') || t.office === 'government') category = 'Pemerintahan';
-        else if (t.tourism || t.historic || t.natural || t.sport) category = 'Pariwisata';
+        else if (t.tourism || t.historic || t.natural || t.sport) { category = 'Wisata'; wisata = true; }
         if (!category) return;
         const lat = e.lat ?? e.center?.lat, lon = e.lon ?? e.center?.lon;
         if (lat == null || lon == null) return;
         const nm = t.name || t['name:id'] || `${category} (tanpa nama)`;
-        if (category === 'Pariwisata' && sudahManual(nm)) return;
+        if (wisata) {
+          if (sudahManual(nm)) return; // pakai koordinat manual
+          category = klasifikasiWisata(nm, t);
+        }
         addPoint({ name: nm, category, lat: Number(lat), lon: Number(lon), source: 'OpenStreetMap', properties: t });
       });
       return true;
@@ -601,7 +651,7 @@ async function loadOSM() {
   renderLegend();
   let ok = 0; const gagal = [];
   for (const f of FILES) { if (await muatFile(f)) ok++; else gagal.push(f.file); }
-  WISATA_MANUAL.forEach(([nama, lat, lon]) => addPoint({ name: nama, category: 'Pariwisata', lat, lon, source: 'Data wisata (koordinat diperbarui)' }));
+  WISATA_MANUAL.forEach(([nama, lat, lon, jenis]) => addPoint({ name: nama, category: jenis || klasifikasiWisata(nama), lat, lon, source: 'Data wisata (koordinat diperbarui)' }));
   updateRecap(); applyPointFilters();
   renderLegend();
   map.fitBounds(ALL_BOUNDS);
