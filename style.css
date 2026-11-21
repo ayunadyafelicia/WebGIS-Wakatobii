@@ -51,6 +51,10 @@ hr { margin: 14px 0; border: 0; border-top: 1px solid #eaeded; }
 .bg-permukiman { background: #d4ac0d; color: #263238; }
 .bg-lainnya { background: #34495e; }
 
+/* SIMBOL BANGUNAN */
+.marker-bangunan { width: 24px; height: 24px; background: linear-gradient(135deg, #5c6bc0, #283593); box-shadow: 0 2px 6px #0007; }
+.marker-bangunan i { font-size: 11px; }
+
 /* LEGENDA JALAN */
 .legend { background: #fffffff2; padding: 12px; border-radius: 8px; box-shadow: 0 0 12px #0004; font-size: 11px; line-height: 20px; max-height: 60vh; overflow-y: auto; }
 .legend-title { font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid #ccc; color: #2c3e50; }
